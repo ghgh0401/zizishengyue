@@ -1,0 +1,2632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歌曲详情 - 艺考助手</title>
+    <script>
+        // 确保页面在正确的协议和端口打开
+        if (window.location.protocol !== 'http:' || window.location.port !== '3004') {
+            console.log('检测到错误的协议或端口，正在重定向到正确的URL...');
+            const path = window.location.pathname.split('/').pop();
+            window.location.href = `http://localhost:3004/${path}`;
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1a56db',
+                        secondary: '#60a5fa',
+                        dark: '#1e40af',
+                        light: '#dbeafe',
+                        neutral: '#f3f4f6',
+                        'neutral-dark': '#4b5563'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    },
+                    boxShadow: {
+                        'card': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                        'hover': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'slide-up': 'slideUp 0.5s ease-out'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        },
+                        gradientMove: {
+                            '0%': { backgroundPosition: '0% 50%' },
+                            '50%': { backgroundPosition: '100% 50%' },
+                            '100%': { backgroundPosition: '0% 50%' }
+                        },
+                        ripple: {
+                            '0%': { width: '0', height: '0', opacity: '0.7' },
+                            '100%': { width: '200px', height: '200px', opacity: '0' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            .bg-blur {
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+            }
+            .transition-all-300 {
+                transition: all 300ms ease;
+            }
+            .rounded-xl-full {
+                border-radius: 9999px 9999px 0 0;
+            }
+            .gradient-text {
+                background-clip: text;
+                -webkit-background-clip: text;
+                color: transparent;
+                background-image: linear-gradient(90deg, #1a56db, #60a5fa);
+            }
+        }
+    </style>
+    <style>
+        /* 全局样式重置和基础设置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            line-height: 1.6;
+            color: #374151;
+            background-color: #f9fafb;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #c5c7cb;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a9ac;
+        }
+        
+        /* 页面过渡动画 */
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        /* 按钮波纹效果 */
+        .btn-ripple {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.5);
+            transform: scale(0);
+            animation: ripple-animation 0.6s linear;
+        }
+        
+        /* 防止触摸设备上的蓝色高亮 */
+        * {
+            -webkit-tap-highlight-color: transparent !important;
+            -webkit-touch-callout: none !important;
+        }
+        
+        /* 禁用全局的文本选择高亮，防止任何地方出现蓝色背景 */
+        ::selection, 
+        ::-moz-selection {
+            background-color: transparent !important;
+            color: inherit !important;
+        }
+        
+        /* 歌词相关样式 */
+        .lyrics-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        
+        .lyric-line {
+            position: relative;
+            padding: 8px 0;
+            text-align: center;
+            white-space: normal;
+            word-wrap: break-word;
+            hyphens: auto;
+            text-wrap: balance;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
+        /* 分页控件样式 */
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .pagination button {
+            padding: 8px 16px;
+            background-color: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            color: #4b5563;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .pagination button:hover:not(:disabled) {
+            background-color: #e5e7eb;
+            border-color: #d1d5db;
+        }
+        
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .pagination span {
+            color: #4b5563;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        /* 字体大小调整控件样式 */
+        .font-size-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .font-size-control button {
+            padding: 4px 10px;
+            background-color: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            color: #4b5563;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .font-size-control button:hover:not(:disabled) {
+            background-color: #e5e7eb;
+            border-color: #d1d5db;
+        }
+        
+        .font-size-control button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* 例外元素的指针事件设置 */
+        .pointer-events-auto {
+            pointer-events: auto !important;
+        }
+        
+        /* 歌词卡片容器样式 */
+        .lyrics-card {
+            position: relative;
+            border-radius: 16px;
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            padding: 24px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            overflow: hidden;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .lyrics-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        }
+        
+        .lyrics-card:hover {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px);
+            border-color: #cbd5e1;
+        }
+        
+        /* 推荐歌曲卡片样式 */
+        .recommendations-card {
+            position: relative;
+            border-radius: 16px;
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            padding: 24px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .recommendations-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #10b981, #3b82f6);
+        }
+        
+        .recommendations-card:hover {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px);
+            border-color: #cbd5e1;
+        }
+        
+        /* 移动端响应式调整 */
+        @media (max-width: 768px) {
+            .lyrics-wrapper {
+                max-width: 100%;
+            }
+            
+            .lyric-line {
+                font-size: 0.95rem;
+            }
+            
+            .pagination button {
+                padding: 6px 12px;
+                font-size: 14px;
+            }
+            
+            .font-size-control button {
+                padding: 3px 8px;
+                font-size: 14px;
+            }
+            
+            .lyrics-card {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body class="opacity-0 transition-opacity duration-500">
+    <div class="min-h-screen bg-gradient-to-b from-neutral to-white">
+        <!-- 导航栏 -->
+        <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-sm">
+            <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+                <a href="index.html" class="flex items-center gap-2 text-primary font-bold text-xl">
+                    <i class="fa fa-music text-2xl"></i>
+                    <span>艺考助手</span>
+                </a>
+                <nav class="hidden md:flex items-center gap-8">
+                    <a href="song-library.html" class="text-gray-600 hover:text-primary transition-colors">曲库</a>
+                    <a href="strategy.html" class="text-gray-600 hover:text-primary transition-colors">备考策略</a>
+                    <a href="user-center.html" class="text-gray-600 hover:text-primary transition-colors">个人中心</a>
+                </nav>
+                <div class="flex items-center gap-4">
+                    <button class="text-gray-600 hover:text-primary transition-colors text-xl md:hidden" id="mobile-menu-btn">
+                        <i class="fa fa-bars"></i>
+                    </button>
+
+                </div>
+            </div>
+            <!-- 移动端菜单 -->
+            <div class="md:hidden hidden bg-white border-t border-gray-200" id="mobile-menu">
+                <div class="container mx-auto px-4 py-3 flex flex-col gap-4">
+                    <a href="song-library.html" class="text-gray-600 hover:text-primary transition-colors py-2">曲库</a>
+                    <a href="strategy.html" class="text-gray-600 hover:text-primary transition-colors py-2">备考策略</a>
+                    <a href="user-center.html" class="text-gray-600 hover:text-primary transition-colors py-2">个人中心</a>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主要内容 -->
+        <main class="container mx-auto px-4 py-8">
+            <!-- 面包屑导航 -->
+            <nav class="text-sm text-gray-500 mb-6" aria-label="Breadcrumb">
+                <ol class="flex items-center gap-2">
+                    <li><a href="index.html" class="hover:text-primary transition-colors">首页</a></li>
+                    <li><span class="mx-1">&gt;</span></li>
+                    <li><a href="song-library.html" class="hover:text-primary transition-colors">曲库</a></li>
+                    <li><span class="mx-1">&gt;</span></li>
+                    <li class="text-primary font-medium" aria-current="page"><span id="breadcrumb-song-title">歌曲详情</span></li>
+                </ol>
+            </nav>
+
+            <!-- 歌曲详情卡片 -->
+            <div class="bg-white rounded-2xl shadow-card mb-8 overflow-hidden">
+                <div class="md:flex">
+                    <!-- 歌曲封面 -->
+                    <div class="md:w-1/3 p-6 flex justify-center items-start" style="min-height: 320px;">
+                        <div class="relative">
+                            <div id="song-cover" class="w-64 h-64 md:w-80 md:h-80 rounded-lg overflow-hidden shadow-lg bg-gradient-to-br from-indigo-500 to-purple-600 animate-float flex items-center justify-center">
+                                    <div class="text-white text-9xl opacity-90">
+                                        ♪
+                                    </div>
+                                </div>
+                            <!-- 播放按钮 -->
+                            <button class="absolute bottom-4 right-4 w-14 h-14 bg-primary/90 hover:bg-dark/90 text-white rounded-full flex items-center justify-center shadow-lg transition-all-300 transform hover:scale-105">
+                                <i class="fa fa-play text-2xl ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 歌曲信息 -->
+                    <div class="md:w-2/3 p-6">
+                        <h1 id="song-title" class="text-3xl font-bold text-gray-800 mb-2">樱华月见</h1>
+                        <p id="song-composer" class="text-gray-600 mb-4">作曲：张音乐</p>
+                        
+                        <!-- 歌曲标签 -->
+                        <div class="flex flex-wrap gap-2 mb-6">
+                            <span class="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">流行</span>
+                            <span class="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">抒情</span>
+                            <span class="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">艺考推荐</span>
+                        </div>
+                        
+                        <!-- 操作按钮 -->
+                        <div class="flex flex-wrap gap-3">
+                            <button id="favorite-btn" class="px-4 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors flex items-center">
+                                <i class="fa fa-heart mr-2"></i>收藏
+                            </button>
+                            <button id="share-btn" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center">
+                                <i class="fa fa-share-alt mr-2"></i>分享
+                            </button>
+                            <button id="comment-btn" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center">
+                                <i class="fa fa-comment mr-2"></i>评论
+                            </button>
+                            <button id="analysis-report-btn" class="px-4 py-2 bg-secondary/10 text-secondary rounded-lg hover:bg-secondary/20 transition-colors flex items-center">
+                                <i class="fa fa-bar-chart mr-2"></i>歌曲分析
+                            </button>
+                        </div>
+                        
+                        <!-- 乐谱预览和下载 -->
+                        <div class="mt-8">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">乐谱预览</h3>
+                            <div class="relative bg-neutral rounded-lg p-4 flex flex-col items-center">
+                                <img id="sheet-music-preview" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSI2IiBmaWxsPSIjZjRmNWY3Ii8+PHBhdGggZD0iTTkgNmg2djJoLTZWMnoiIGZpbGw9IiM0MDNlMzQiLz48L3N2Zz4=" alt="乐谱预览" class="max-w-full h-auto max-h-40 object-contain">
+                                <div class="flex gap-3 mt-4">
+                                    <button id="download-btn" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-dark transition-colors flex items-center">
+                                        <i class="fa fa-download mr-2"></i>下载乐谱
+                                    </button>
+                                    <button id="view-full-sheet-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors flex items-center">
+                                        <i class="fa fa-expand mr-2"></i>查看完整曲谱
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 歌曲内容 -->
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- 左侧：歌词 -->
+                <div class="md:col-span-2">
+                    <div class="bg-white rounded-2xl shadow-card p-6 mb-8 lyrics-card border border-gray-100" style="min-height: 400px; height: 100%;">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <i class="fa fa-align-left text-primary mr-2"></i>
+                            歌词
+                        </h2>
+                        <div id="song-lyrics" class="text-gray-700 p-6 min-h-[200px] leading-relaxed text-center">
+                            <!-- 歌词将通过JavaScript动态加载 -->
+                            <div class="flex justify-center items-center h-full">
+                                <div class="text-center">
+                                    <div class="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
+                                    <p class="text-gray-600">加载歌词中...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 歌曲介绍和演唱提示区域已移除 -->
+                </div>
+
+                <!-- 右侧：推荐歌曲 -->
+                <div class="md:col-span-1">
+                    <div class="bg-white rounded-2xl shadow-card p-6 recommendations-card border border-gray-100" style="min-height: 400px; height: 100%;">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <i class="fa fa-thumbs-up text-primary mr-2"></i>
+                            推荐歌曲
+                        </h2>
+                        <div id="latest-songs" class="space-y-4">
+                            <!-- 推荐歌曲将通过JavaScript动态加载 -->
+                            <div class="animate-pulse-slow">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-16 h-16 bg-neutral rounded-lg"></div>
+                                    <div class="flex-1">
+                                        <div class="h-4 bg-neutral rounded w-3/4 mb-2"></div>
+                                        <div class="h-3 bg-neutral rounded w-1/2"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="animate-pulse-slow delay-100">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-16 h-16 bg-neutral rounded-lg"></div>
+                                    <div class="flex-1">
+                                        <div class="h-4 bg-neutral rounded w-3/4 mb-2"></div>
+                                        <div class="h-3 bg-neutral rounded w-1/2"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="animate-pulse-slow delay-200">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-16 h-16 bg-neutral rounded-lg"></div>
+                                    <div class="flex-1">
+                                        <div class="h-4 bg-neutral rounded w-3/4 mb-2"></div>
+                                        <div class="h-3 bg-neutral rounded w-1/2"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-6 text-center">
+                            <a href="song-library.html" class="text-primary hover:text-dark transition-colors font-medium flex items-center justify-center">
+                                查看更多
+                                <i class="fa fa-chevron-right ml-1 text-xs"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 评论区域 -->
+            <section id="comments-section" class="mt-12">
+                <div class="container mx-auto px-4">
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h2 class="text-2xl font-bold mb-6 text-gray-800">评论区</h2>
+                        
+                        <!-- 评论输入框 -->
+                        <div class="mb-8">
+                            <div class="flex items-start gap-4">
+                                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSI2IiBmaWxsPSIjMTY2OGZmIi8+PC9zdmc+" alt="用户头像" class="w-12 h-12 rounded-full object-cover">
+                                <div class="flex-1">
+                                    <textarea id="comment-input" placeholder="写下你的评论..." class="w-full p-4 border border-gray-200 rounded-xl resize-none h-32 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"></textarea>
+                                    <div class="mt-3 flex justify-end">
+                                        <button id="submit-comment" class="px-6 py-2 bg-primary text-white rounded-full hover:bg-primary/90 transition-colors shadow-sm">
+                                            发布评论
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 评论列表 -->
+                        <div id="comments-list">
+                            <h3 class="text-lg font-semibold mb-4 text-gray-700">全部评论</h3>
+                            
+                            <!-- 模拟评论数据 -->
+                            <div class="space-y-6">
+                                <!-- 评论1 -->
+                                <div class="comment-item border-b border-gray-100 pb-6">
+                                    <div class="flex items-start gap-4">
+                                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48Y2lyY2xlIGN4PSI2IiBjeT0iNiIgcj0iMyIgZmlsbD0iIzFhNjBmYSIvPjxwYXRoIGQ9Ik0xMiAxNmMxLjIgMCAyLjItMSA0LjEtMnoiIGZpbGw9IiNmNWYxZjgiLz48L3N2Zz4=" alt="用户头像" class="w-10 h-10 rounded-full object-cover">
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <span class="font-semibold text-gray-800">李明</span>
+                                                <span class="text-xs text-gray-400">2天前</span>
+                                            </div>
+                                            <p class="text-gray-600 mb-2">这首歌真的太美了，旋律很优美，歌词也很有意境。我已经练习了一周，感觉进步很大。谢谢分享！</p>
+                                            <div class="flex items-center gap-4 text-sm text-gray-400">
+                                                <button class="hover:text-primary transition-colors flex items-center gap-1">
+                                                    <i class="fa fa-thumbs-up"></i>
+                                                    <span>12</span>
+                                                </button>
+                                                <button class="hover:text-primary transition-colors">回复</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 评论2 -->
+                                <div class="comment-item border-b border-gray-100 pb-6">
+                                    <div class="flex items-start gap-4">
+                                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48Y2lyY2xlIGN4PSIxOCIgY3k9IjYiIHI9IjMiIGZpbGw9IiMxYTYwZmEiLz48cGF0aCBkPSJNMTIgMTZjMS4yIDAgMi4yLTEgNC4xLTJ6IiBmaWxsPSIjZjVmMWY4Ii8+PC9zdmc+" alt="用户头像" class="w-10 h-10 rounded-full object-cover">
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <span class="font-semibold text-gray-800">张华</span>
+                                                <span class="text-xs text-gray-400">5天前</span>
+                                            </div>
+                                            <p class="text-gray-600 mb-2">演唱提示非常有用，特别是关于音域和技巧的部分。我发现这首歌的高音部分需要特别注意气息控制，感谢提供的详细指导！</p>
+                                            <div class="flex items-center gap-4 text-sm text-gray-400">
+                                                <button class="hover:text-primary transition-colors flex items-center gap-1">
+                                                    <i class="fa fa-thumbs-up"></i>
+                                                    <span>8</span>
+                                                </button>
+                                                <button class="hover:text-primary transition-colors">回复</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 评论3 -->
+                                <div class="comment-item">
+                                    <div class="flex items-start gap-4">
+                                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48Y2lyY2xlIGN4PSI2IiBjeT0iMTgiIHI9IjMiIGZpbGw9IiMxYTYwZmEiLz48cGF0aCBkPSJNMTIgMTZjMS4yIDAgMi4yLTEgNC4xLTJ6IiBmaWxsPSIjZjVmMWY4Ii8+PC9zdmc+" alt="用户头像" class="w-10 h-10 rounded-full object-cover">
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <span class="font-semibold text-gray-800">王芳</span>
+                                                <span class="text-xs text-gray-400">1周前</span>
+                                            </div>
+                                            <p class="text-gray-600 mb-2">有没有人知道这首歌的伴奏在哪里可以下载？我很想练习但是找不到合适的伴奏。希望作者能分享一下，谢谢！</p>
+                                            <div class="flex items-center gap-4 text-sm text-gray-400">
+                                                <button class="hover:text-primary transition-colors flex items-center gap-1">
+                                                    <i class="fa fa-thumbs-up"></i>
+                                                    <span>5</span>
+                                                </button>
+                                                <button class="hover:text-primary transition-colors">回复</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 加载更多按钮 -->
+                            <div class="mt-6 text-center">
+                                <button id="load-more-comments" class="px-6 py-2 border border-gray-200 text-gray-600 rounded-full hover:bg-gray-50 transition-colors">
+                                    加载更多评论
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 页脚 -->
+        <footer class="bg-gray-800 text-white py-10 mt-12">
+            <div class="container mx-auto px-4">
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div>
+                        <h3 class="text-xl font-bold mb-4 flex items-center">
+                            <i class="fa fa-music mr-2"></i>
+                            艺考助手
+                        </h3>
+                        <p class="text-gray-400 mb-4">为艺考生提供专业的音乐学习资源和备考指导</p>
+                        <div class="flex gap-4">
+                            <a href="#" class="text-gray-400 hover:text-white transition-colors text-xl">
+                                <i class="fa fa-weixin"></i>
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-white transition-colors text-xl">
+                                <i class="fa fa-weibo"></i>
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-white transition-colors text-xl">
+                                <i class="fa fa-youtube-play"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-4">快速链接</h4>
+                        <ul class="space-y-2 text-gray-400">
+                            <li><a href="song-library.html" class="hover:text-white transition-colors">曲库</a></li>
+                            <li><a href="strategy.html" class="hover:text-white transition-colors">备考策略</a></li>
+                            <li><a href="user-center.html" class="hover:text-white transition-colors">个人中心</a></li>
+                            <li><a href="admin.html" class="hover:text-white transition-colors">管理后台</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-4">联系我们</h4>
+                        <ul class="space-y-2 text-gray-400">
+                            <li class="flex items-center gap-2">
+                                <i class="fa fa-envelope"></i>
+                                <span>contact@yikaozhushou.com</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <i class="fa fa-phone"></i>
+                                <span>400-800-8888</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <i class="fa fa-map-marker"></i>
+                                <span>北京市海淀区中关村大街1号</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-500 text-sm">
+                    <p>© 2023 艺考助手 版权所有 | 京ICP备12345678号</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 获取URL参数
+        function getUrlParams() {
+            const params = {};
+            const queryString = window.location.search.substring(1);
+            const pairs = queryString.split('&');
+            for (let i = 0; i < pairs.length; i++) {
+                const pair = pairs[i].split('=');
+                params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
+            }
+            return params;
+        }
+
+        function generateHash(id) {
+            return id % 1000;
+        }
+
+        // 加载歌曲详情
+        async function loadSongDetail(songId) {
+            try {
+                // 显示加载状态
+                const loadingIndicator = document.createElement('div');
+                loadingIndicator.id = 'loading-indicator';
+                loadingIndicator.className = 'fixed inset-0 bg-white/80 flex items-center justify-center z-50';
+                loadingIndicator.innerHTML = `
+                    <div class="text-center">
+                        <i class="fa fa-spinner fa-spin text-4xl text-primary mb-4"></i>
+                        <p class="text-lg text-gray-700">正在加载歌曲详情...</p>
+                    </div>
+                `;
+                document.body.appendChild(loadingIndicator);
+                
+                // 尝试从API获取真实数据，使用完整URL确保正确连接
+                // 使用与服务器相同的端口
+        const port = window.location.port || '3004';
+        console.log(`尝试获取歌曲ID: ${songId} 的详情，请求URL: http://localhost:${port}/api/songs/${songId}`);
+        const response = await fetch(`http://localhost:${port}/api/songs/${songId}`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log(`API请求状态: ${response.status}, ${response.statusText}`);
+                console.log(`响应头:`, response.headers);
+                console.log(`响应类型:`, response.type);
+                
+                if (!response.ok) {
+                    console.error(`API请求失败: ${response.status} - ${response.statusText}`);
+                    throw new Error(`API请求失败: ${response.status}`);
+                }
+                
+                const responseData = await response.json();
+                console.log('完整的API响应数据:', responseData);
+                console.log('响应数据类型:', typeof responseData);
+                
+                // 检查响应数据格式
+                if (!responseData.success || !responseData.data) {
+                    console.error('API返回数据格式不正确:', responseData);
+                    throw new Error('API返回数据格式不正确');
+                }
+                
+                const songData = responseData.data;
+                console.log('解析后的歌曲数据:', songData);
+                console.log('数据类型:', typeof songData);
+                console.log('数据结构:', Object.keys(songData));
+                
+                // 保存到全局变量
+                window.currentSongData = songData;
+                
+                // 更新页面上的数据
+                document.getElementById('song-title').textContent = songData.title;
+                document.getElementById('breadcrumb-song-title').textContent = songData.title;
+                document.title = `${songData.title} - 歌曲详情 - 艺考助手`;
+                document.getElementById('song-composer').textContent = `作曲：${songData.composer}`;
+                // 确保coverUrl正确设置，考虑服务器返回的是imageUrl字段
+                const songCoverDiv = document.getElementById('song-cover');
+                // 先清空div内容
+                songCoverDiv.innerHTML = '';
+                
+                // 创建img元素来显示封面图片
+                const coverImg = document.createElement('img');
+                coverImg.src = songData.coverUrl || songData.imageUrl || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48cGF0aCBkPSJNNCA0aDE2djE2SDQuMCIgZmlsbD0iIzFhNjBmYSIvPjxwYXRoIGQ9Ik0xMiAxNmMxLjIgMCAyLjItMSA0LjEtMnoiIGZpbGw9IiNmNWYxZjgiLz48L3N2Zz4=';
+                coverImg.className = 'h-full w-full object-cover rounded-lg';
+                coverImg.alt = songData.title || '歌曲封面';
+                
+                // 添加到div中
+                songCoverDiv.appendChild(coverImg);
+                
+                // 加载歌词和更新乐谱预览
+                loadAndDisplayLyrics(songId);
+                updateSheetMusicPreview(songData);
+                
+                console.log('歌曲详情已从API成功加载:', songData);
+                
+                // 显式返回歌曲数据，表示成功
+                return { success: true, data: songData };
+                
+            } catch (error) {
+                console.error('加载歌曲详情失败，使用模拟数据:', error);
+                console.error('错误类型:', error.name);
+                console.error('错误信息:', error.message);
+                console.error('错误堆栈:', error.stack);
+                
+                // 使用哈希函数生成确定性的标题
+                const hash = generateHash(songId);
+                const titles = [
+                    '樱华月见', '风之轻语', '星空漫舞', '晨曦之光',
+                    '暮色河畔', '春之律动', '夏日回忆', '秋月无边',
+                    '冬雪消融', '山海传说', '云裳羽衣', '花落尘埃'
+                ];
+                const title = titles[hash % titles.length];
+                
+                // 更新页面上的歌曲标题
+                document.getElementById('song-title').textContent = title;
+                document.getElementById('breadcrumb-song-title').textContent = title;
+                document.title = `${title} - 歌曲详情 - 艺考助手`;
+                
+                // 更新作曲家
+                document.getElementById('song-composer').textContent = `作曲：${getComposerById(songId)}`;
+                
+                // 更新封面
+                const songCoverDiv = document.getElementById('song-cover');
+                // 先清空div内容
+                songCoverDiv.innerHTML = '';
+                
+                // 创建img元素来显示封面图片
+                const coverImg = document.createElement('img');
+                coverImg.src = getImageUrlById(songId);
+                coverImg.className = 'h-full w-full object-cover rounded-lg';
+                coverImg.alt = title || '歌曲封面';
+                
+                // 添加到div中
+                songCoverDiv.appendChild(coverImg);
+                
+                // 模拟歌曲数据
+                // 创建一个HTML文件列表，包含文件夹中可用的分析报告文件
+                const htmlFiles = [
+                    '1759195370542_w6bCmMKlw6jCisKxw6fCp8KLw6bCnMKIw6TCvcKVw6bCl8K2w6TCusKG.html',
+                    '1759200790838_w6fCmcK9w6XCpMK0w6XCkMKf.html',
+                    'html_1759224748724.html',
+                    'html_1759373632828.html',
+                    'html_1759373648252.html',
+                    'html_1759373910180.html',
+                    'html_1759374519685.html'
+                ];
+                
+                // 将songId转换为数字索引，对文件数量取模，确保索引在有效范围内
+                const fileIndex = parseInt(songId) % htmlFiles.length;
+                const htmlFileName = htmlFiles[fileIndex >= 0 ? fileIndex : 0];
+                
+                window.currentSongData = {
+                    id: songId,
+                    title: title,
+                    composer: getComposerById(songId),
+                    coverUrl: getImageUrlById(songId),
+                    tags: getTagsById(songId),
+                    lyrics: getLyricsById(songId),
+
+                    sheetMusicPath: 'sheet-music/sheet_music_1759373910180.jpg',
+                    sheetMusicPreviewPath: 'sheet-music/sheet_music_1759373910180.jpg',
+                    // 根据不同歌曲ID返回不同的HTML文件
+                    htmlFilePath: `HTML/${htmlFileName}`
+                };
+                
+                // 加载歌词
+                loadAndDisplayLyrics(songId);
+                
+                // 更新乐谱预览
+                updateSheetMusicPreview(window.currentSongData);
+                
+                // 歌曲介绍和演唱提示区域已移除
+                
+                // 显示错误通知
+                showNotification('warning', '加载提示', '无法连接到服务器，使用模拟数据显示');
+                
+                // 显式返回错误信息和模拟数据，表示失败
+                return { success: false, error: error.message, data: window.currentSongData };
+            } finally {
+                // 移除加载指示器
+                const loadingIndicator = document.getElementById('loading-indicator');
+                if (loadingIndicator) {
+                    loadingIndicator.remove();
+                }
+            }
+        }
+
+        // 根据ID获取作曲家
+        function getComposerById(id) {
+            // 使用哈希函数生成确定性的作曲家
+            const hash = generateHash(id);
+            const composers = [
+                '张音乐', '李思韵', '王旋律', '刘和音',
+                '陈明乐', '黄清韵', '赵弦乐', '钱和声',
+                '孙节奏', '周曲韵', '吴音符', '郑乐律'
+            ];
+            return composers[hash % composers.length];
+        }
+
+        // 根据ID获取图片URL
+        function getImageUrlById(id) {
+            // 使用哈希函数生成确定性的图片URL
+            const hash = generateHash(id);
+            // 使用picsum.photos服务，但根据哈希值生成不同的随机数
+            // 这样可以确保相同ID总是返回相同图片，不同ID返回不同图片
+            return `https://picsum.photos/400/300?random=${hash % 1000}`;
+        }
+
+        // 根据ID获取标签
+        function getTagsById(id) {
+            // 使用哈希函数生成确定性的标签
+            const hash = generateHash(id);
+            const tagCategories = [
+                ['流行', '抒情', '柔和'],
+                ['摇滚', '激情', '动感'],
+                ['古典', '优雅', '舒缓'],
+                ['爵士', '蓝调', '随性'],
+                ['民谣', '清新', '自然'],
+                ['电子', '现代', '前卫'],
+                ['世界', '民族', '独特'],
+                ['戏曲', '传统', '经典']
+            ];
+            return tagCategories[hash % tagCategories.length];
+        }
+
+        // 根据ID获取歌词
+        function getLyricsById(id) {
+            // 首先尝试从localStorage中获取保存的歌词
+            try {
+                const storedLyrics = localStorage.getItem(`lyrics_${id}`);
+                if (storedLyrics) {
+                    return storedLyrics;
+                }
+            } catch (error) {
+                console.error('从localStorage读取歌词失败:', error);
+            }
+            
+            // 然后检查全局数据
+            if (window.currentSongData && typeof window.currentSongData === 'object' && window.currentSongData.lyrics) {
+                return window.currentSongData.lyrics;
+            }
+            if (typeof currentSongData !== 'undefined' && currentSongData && typeof currentSongData === 'object' && currentSongData.lyrics) {
+                return currentSongData.lyrics;
+            }
+            
+            // 返回默认歌词作为示例
+            return `[00:00.00] 樱华月见
+[00:05.30] 演唱：艺考助手
+[00:10.50] 作曲：张音乐
+[00:15.70] 编曲：李思韵
+
+[00:20.00] 樱花飘落的季节
+[00:25.10] 月光洒在窗前
+[00:30.20] 思绪万千
+[00:35.30] 回忆在眼前浮现
+
+[00:40.40] 那年的春天
+[00:45.50] 我们许下的心愿
+[00:50.60] 如今是否
+[00:55.70] 依然清晰可见
+
+[01:00.80] 樱华月见 时光流转
+[01:05.90] 岁月如歌 不变的思念
+[01:11.00] 无论相隔多远
+[01:16.10] 心依然相连
+
+[01:21.20] 樱华月见 情深缘浅
+[01:26.30] 往事如烟 珍藏在心间
+[01:31.40] 等到樱花再开
+[01:36.50] 我们再相见`;
+        }
+        
+        // 保存歌词到localStorage
+        function saveLyrics(songId, lyrics) {
+            try {
+                localStorage.setItem(`lyrics_${songId}`, lyrics);
+                return true;
+            } catch (error) {
+                console.error('保存歌词失败:', error);
+                return false;
+            }
+        }
+        
+        // 创建上传歌词模态框
+        const lyricsUploadModal = document.createElement('div');
+        lyricsUploadModal.id = 'lyrics-upload-modal';
+        lyricsUploadModal.className = 'fixed inset-0 bg-gray-900 opacity-80 z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300';
+        lyricsUploadModal.innerHTML = `
+            <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col transform transition-all duration-300 scale-95 translate-y-4">
+                <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-primary/5 to-secondary/5">
+                    <h3 class="text-xl font-bold text-gray-800 flex items-center">
+                        <i class="fa fa-music text-primary mr-2"></i> 上传歌词
+                    </h3>
+                    <button id="close-lyrics-modal" class="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100 transition-colors">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <label for="lyrics-text" class="block text-gray-700 font-medium mb-2">歌词内容</label>
+                        <textarea id="lyrics-text" rows="15" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all resize-none" placeholder="请输入或粘贴歌词..."></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button id="cancel-upload-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">取消</button>
+                        <button id="save-lyrics-btn" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-dark transition-colors">保存歌词</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(lyricsUploadModal);
+        
+        // 初始化歌词上传功能
+        function initLyricsUpload() {
+            const uploadBtn = document.createElement('button');
+            uploadBtn.id = 'upload-lyrics-btn';
+            uploadBtn.className = 'px-4 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors flex items-center text-sm mt-4';
+            uploadBtn.innerHTML = '<i class="fa fa-upload mr-2"></i>上传歌词';
+            
+            // 将上传按钮添加到操作按钮区域下方
+            const actionButtons = document.querySelector('.flex.flex-wrap.gap-3');
+            if (actionButtons) {
+                actionButtons.parentNode.insertBefore(uploadBtn, actionButtons.nextSibling);
+            }
+            
+            // 上传按钮点击事件
+            uploadBtn.addEventListener('click', function() {
+                // 尝试从URL获取歌曲ID，如果没有则使用默认值
+                const params = getUrlParams();
+                const songId = params.id || '1';
+                const currentLyrics = getLyricsById(songId);
+                
+                // 填充当前歌词到文本框
+                document.getElementById('lyrics-text').value = currentLyrics;
+                
+                // 显示模态框
+                const modal = document.getElementById('lyrics-upload-modal');
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.add('opacity-100');
+                    const modalContent = modal.querySelector('.bg-white');
+                    modalContent.classList.remove('scale-95', 'translate-y-4');
+            modalContent.classList.add('scale-100', 'translate-y-0');
+        }, 10);
+    });
+    
+    // 关闭模态框
+    document.getElementById('close-lyrics-modal').addEventListener('click', function() {
+        closeLyricsModal();
+    });
+    
+    document.getElementById('cancel-upload-btn').addEventListener('click', function() {
+        closeLyricsModal();
+    });
+    
+    document.getElementById('lyrics-upload-modal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeLyricsModal();
+        }
+    });
+    
+    // 保存歌词
+    document.getElementById('save-lyrics-btn').addEventListener('click', function() {
+        // 尝试从URL获取歌曲ID，如果没有则使用默认值
+        const params = getUrlParams();
+        const songId = params.id || '1';
+        const lyrics = document.getElementById('lyrics-text').value.trim();
+        
+        if (!lyrics) {
+            showNotification('error', '保存失败', '歌词内容不能为空');
+            return;
+        }
+        
+        if (saveLyrics(songId, lyrics)) {
+            // 更新页面上的歌词显示
+            const songData = window.currentSongData || currentSongData;
+            if (songData) {
+                songData.lyrics = lyrics;
+            }
+            
+            // 使用新的歌词显示函数
+            displayLyricsNicely(lyrics);
+            
+            closeLyricsModal();
+            showNotification('success', '保存成功', '歌词已成功上传并更新');
+        } else {
+            showNotification('error', '保存失败', '歌词保存过程中发生错误');
+        }
+    });
+}
+
+// 关闭歌词上传模态框
+function closeLyricsModal() {
+    const modal = document.getElementById('lyrics-upload-modal');
+    const modalContent = modal.querySelector('.bg-white');
+    
+    modal.classList.remove('opacity-100');
+            modalContent.classList.remove('scale-100', 'translate-y-0');
+            modalContent.classList.add('scale-95', 'translate-y-4');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+        
+        // 精致的歌词显示函数 - 支持分页和字体调整
+        function displayLyricsNicely(lyrics) {
+            const lyricsContainer = document.getElementById('song-lyrics');
+            if (!lyricsContainer) return;
+            
+            // 清空容器
+            lyricsContainer.innerHTML = '';
+            // 完全自定义样式，使用最基本的类名避免任何可能的颜色干扰
+            lyricsContainer.className = 'text-gray-700 p-6 min-h-[200px] leading-relaxed text-center';
+            
+            // 添加最严格的样式防止任何文本颜色变化和交互效果
+            lyricsContainer.style.userSelect = 'none';
+            lyricsContainer.style.webkitUserSelect = 'none';
+            lyricsContainer.style.MozUserSelect = 'none';
+            lyricsContainer.style.msUserSelect = 'none';
+            lyricsContainer.style.webkitTapHighlightColor = 'transparent';
+            lyricsContainer.style.webkitTouchCallout = 'none';
+            lyricsContainer.style.pointerEvents = 'none';
+            lyricsContainer.style.tapHighlightColor = 'transparent';
+            lyricsContainer.style.color = '#4b5563'; // 明确设置文本颜色
+            lyricsContainer.style.backgroundColor = 'transparent'; // 明确设置背景色为透明
+            lyricsContainer.style.border = 'none'; // 明确设置无边框
+            lyricsContainer.style.boxShadow = 'none'; // 明确设置无阴影
+            
+            // 将歌词按行分割，但不立即过滤空行，以便保留段落结构
+            const lines = lyrics.split('\n');
+            
+            // 检查是否有非空歌词行
+            const hasLyrics = lines.some(line => line.trim() !== '');
+            
+            if (!hasLyrics) {
+                lyricsContainer.textContent = '暂无歌词';
+                return;
+            }
+            
+            // 创建歌词容器 - 添加更好的布局控制
+            const lyricsWrapper = document.createElement('div');
+            lyricsWrapper.className = 'lyrics-wrapper relative max-w-[800px] mx-auto';
+            
+            // 检测是否为段落格式（空行分隔）
+            const hasParagraphs = lines.some(line => line.trim() === '');
+            
+            // 临时存储当前段落
+            let currentParagraph = [];
+            let allLines = [];
+            
+            // 处理每一行歌词
+            lines.forEach((line, index) => {
+                // 处理段落
+                if (line.trim() === '') {
+                    if (currentParagraph.length > 0) {
+                        addToAllLines(currentParagraph);
+                        currentParagraph = [];
+                        allLines.push({type: 'empty'});
+                    }
+                    return;
+                }
+                
+                currentParagraph.push(line);
+                
+                // 最后一行时，处理剩余的段落
+                if (index === lines.length - 1 && currentParagraph.length > 0) {
+                    addToAllLines(currentParagraph);
+                }
+            });
+            
+            // 添加段落到所有行
+            function addToAllLines(paragraphLines) {
+                paragraphLines.forEach(line => {
+                    allLines.push({type: 'lyric', content: line});
+                });
+            }
+            
+            // 页面控制变量
+            let currentPage = 1;
+            const linesPerPage = 15; // 每页显示的行数
+            let currentFontSize = 18; // 默认字体大小
+            
+            // 计算总页数
+            const totalPages = Math.ceil(allLines.filter(line => line.type === 'lyric').length / linesPerPage);
+            
+            // 创建歌词内容容器
+            const lyricContent = document.createElement('div');
+            lyricContent.id = 'lyric-content';
+            lyricContent.style.maxHeight = '500px';
+            lyricContent.style.overflowY = 'auto';
+            lyricContent.style.marginBottom = '20px';
+            lyricsWrapper.appendChild(lyricContent);
+            
+            // 创建字体调整控件
+            const fontSizeControl = document.createElement('div');
+            fontSizeControl.className = 'font-size-control mb-4 flex items-center justify-center gap-4';
+            fontSizeControl.style.pointerEvents = 'auto';
+            
+            const smallerBtn = document.createElement('button');
+            smallerBtn.textContent = 'A-';
+            smallerBtn.className = 'px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 transition-colors';
+            smallerBtn.style.pointerEvents = 'auto';
+            smallerBtn.onclick = () => {
+                if (currentFontSize > 12) {
+                    currentFontSize -= 2;
+                    updateFontSize();
+                }
+            };
+            
+            const biggerBtn = document.createElement('button');
+            biggerBtn.textContent = 'A+';
+            biggerBtn.className = 'px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 transition-colors';
+            biggerBtn.style.pointerEvents = 'auto';
+            biggerBtn.onclick = () => {
+                if (currentFontSize < 32) {
+                    currentFontSize += 2;
+                    updateFontSize();
+                }
+            };
+            
+            fontSizeControl.appendChild(smallerBtn);
+            fontSizeControl.appendChild(biggerBtn);
+            lyricsWrapper.appendChild(fontSizeControl);
+            
+            // 创建分页控件
+            if (totalPages > 1) {
+                const pagination = document.createElement('div');
+                pagination.className = 'pagination flex items-center justify-center gap-2';
+                pagination.style.pointerEvents = 'auto';
+                
+                const prevBtn = document.createElement('button');
+                prevBtn.textContent = '上一页';
+                prevBtn.className = 'px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 transition-colors';
+                prevBtn.style.pointerEvents = 'auto';
+                prevBtn.onclick = showPrevPage;
+                
+                const pageInfo = document.createElement('span');
+                pageInfo.className = 'text-sm';
+                
+                const nextBtn = document.createElement('button');
+                nextBtn.textContent = '下一页';
+                nextBtn.className = 'px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 transition-colors';
+                nextBtn.style.pointerEvents = 'auto';
+                nextBtn.onclick = showNextPage;
+                
+                pagination.appendChild(prevBtn);
+                pagination.appendChild(pageInfo);
+                pagination.appendChild(nextBtn);
+                lyricsWrapper.appendChild(pagination);
+            }
+            
+            // 更新字体大小
+            function updateFontSize() {
+                const lyricLines = document.querySelectorAll('.lyric-line');
+                lyricLines.forEach(line => {
+                    line.style.fontSize = `${currentFontSize}px`;
+                });
+            }
+            
+            // 显示指定页面
+            function showPage(pageNum) {
+                lyricContent.innerHTML = '';
+                
+                const startIndex = (pageNum - 1) * linesPerPage;
+                let endIndex = startIndex + linesPerPage;
+                let lyricCount = 0;
+                let displayedCount = 0;
+                
+                // 创建当前页面的歌词
+                const currentPageContent = document.createElement('div');
+                currentPageContent.style.transition = 'opacity 0.3s ease';
+                
+                allLines.forEach((lineObj, index) => {
+                    if (lineObj.type === 'lyric') {
+                        lyricCount++;
+                        if (lyricCount > startIndex && displayedCount < linesPerPage) {
+                            const lyricLine = document.createElement('div');
+                            lyricLine.className = 'lyric-line mb-3 text-lg leading-relaxed';
+                            lyricLine.style.fontSize = `${currentFontSize}px`;
+                            
+                            // 直接设置内联样式，确保文本居中对齐和正常换行，同时防止背景变蓝
+                            lyricLine.style.textAlign = 'center';
+                            lyricLine.style.whiteSpace = 'normal';
+                            lyricLine.style.wordWrap = 'break-word';
+                            lyricLine.style.hyphens = 'auto';
+                            lyricLine.style.textWrap = 'balance';
+                            lyricLine.style.maxWidth = '100%';
+                            lyricLine.style.margin = '0 auto';
+                            lyricLine.style.color = '#4b5563'; // 明确设置文本颜色
+                            lyricLine.style.backgroundColor = 'transparent'; // 明确设置背景色
+                            lyricLine.style.border = 'none'; // 明确设置无边框
+                            lyricLine.style.boxShadow = 'none'; // 明确设置无阴影
+                            
+                            // 处理可能的歌词格式（如：时间戳、歌词内容）
+                            let formattedLine = lineObj.content.trim();
+                            
+                            // 检查是否包含时间戳格式 [mm:ss]
+                            const timestampRegex = /^\[\d{1,2}:\d{2}\]/;
+                            const timestampMatch = formattedLine.match(timestampRegex);
+                            
+                            if (timestampMatch) {
+                                const timestamp = timestampMatch[0];
+                                const lyricText = formattedLine.replace(timestampRegex, '').trim();
+                                
+                                lyricLine.innerHTML = `
+                                    <span class="timestamp text-gray-500 text-sm mr-2">${timestamp}</span>
+                                    <span class="lyric-text">${lyricText}</span>
+                                `;
+                            } else {
+                                lyricLine.textContent = formattedLine;
+                            }
+                            
+                            currentPageContent.appendChild(lyricLine);
+                            displayedCount++;
+                        }
+                    }
+                });
+                
+                lyricContent.appendChild(currentPageContent);
+                currentPage = pageNum;
+                
+                // 更新分页信息
+                const pageInfo = document.querySelector('.pagination span');
+                if (pageInfo) {
+                    pageInfo.textContent = `${currentPage} / ${totalPages}`;
+                }
+                
+                // 更新按钮状态
+                const prevBtn = document.querySelector('.pagination button:first-child');
+                const nextBtn = document.querySelector('.pagination button:last-child');
+                if (prevBtn) {
+                    prevBtn.disabled = currentPage === 1;
+                    prevBtn.style.opacity = currentPage === 1 ? 0.5 : 1;
+                }
+                if (nextBtn) {
+                    nextBtn.disabled = currentPage === totalPages;
+                    nextBtn.style.opacity = currentPage === totalPages ? 0.5 : 1;
+                }
+            }
+            
+            // 显示上一页
+            function showPrevPage() {
+                if (currentPage > 1) {
+                    showPage(currentPage - 1);
+                }
+            }
+            
+            // 显示下一页
+            function showNextPage() {
+                if (currentPage < totalPages) {
+                    showPage(currentPage + 1);
+                }
+            }
+            
+            lyricsContainer.appendChild(lyricsWrapper);
+            
+            // 显示第一页
+            showPage(1);
+            
+            // 添加歌词专用样式
+            let style = document.getElementById('lyrics-style');
+            if (!style) {
+                style = document.createElement('style');
+                style.id = 'lyrics-style';
+                document.head.appendChild(style);
+            }
+            
+            style.textContent = `
+                /* 歌词专用样式 - 仅应用于歌词相关元素 */
+                #song-lyrics,
+                #song-lyrics .lyrics-wrapper,
+                #song-lyrics .lyrics-wrapper * {
+                    -webkit-tap-highlight-color: transparent !important;
+                }
+                
+                /* 歌词主容器样式 - 最高优先级 */
+                #song-lyrics {
+                    position: relative;
+                    width: 100%;
+                    background-color: transparent !important;
+                    border: none !important;
+                    box-shadow: none !important;
+                    -webkit-backface-visibility: hidden;
+                    backface-visibility: hidden;
+                    -webkit-transform: translateZ(0);
+                    transform: translateZ(0);
+                }
+                
+                /* 为#song-lyrics容器添加状态选择器 */
+                #song-lyrics:hover,
+                #song-lyrics:active,
+                #song-lyrics:focus,
+                #song-lyrics:focus-within,
+                #song-lyrics:visited,
+                #song-lyrics:link {
+                    background-color: transparent !important;
+                    border: none !important;
+                    box-shadow: none !important;
+                    transform: none !important;
+                    transition: none !important;
+                    -webkit-backface-visibility: hidden;
+                    backface-visibility: hidden;
+                }
+                
+                /* 确保内联元素也不会产生蓝色背景 */
+                #song-lyrics .lyric-text,
+                #song-lyrics .timestamp {
+                    background-color: transparent !important;
+                    border: none !important;
+                    box-shadow: none !important;
+                    -webkit-backface-visibility: hidden;
+                    backface-visibility: hidden;
+                }
+                
+                /* 为内联元素添加状态选择器 */
+                #song-lyrics .lyric-text:hover,
+                #song-lyrics .lyric-text:active,
+                #song-lyrics .lyric-text:focus,
+                #song-lyrics .lyric-text:visited,
+                #song-lyrics .lyric-text:link,
+                #song-lyrics .timestamp:hover,
+                #song-lyrics .timestamp:active,
+                #song-lyrics .timestamp:focus,
+                #song-lyrics .timestamp:visited,
+                #song-lyrics .timestamp:link {
+                    background-color: transparent !important;
+                    border: none !important;
+                    box-shadow: none !important;
+                    color: #4b5563 !important;
+                    text-decoration: none !important;
+                    -webkit-backface-visibility: hidden;
+                    backface-visibility: hidden;
+                }
+                
+                /* 歌词容器样式 */
+                #song-lyrics .lyrics-wrapper {
+                    position: relative;
+                    width: 100%;
+                    max-width: 800px;
+                    margin: 0 auto;
+                    background-color: transparent !important;
+                    border: none !important;
+                    box-shadow: none !important;
+                    -webkit-user-select: none !important;
+                    -moz-user-select: none !important;
+                    -ms-user-select: none !important;
+                    user-select: none !important;
+                    -webkit-tap-highlight-color: transparent !important;
+                    -webkit-touch-callout: none !important;
+                    pointer-events: none !important;
+                    -webkit-backface-visibility: hidden;
+                    backface-visibility: hidden;
+                }
+                
+                /* 为.lyrics-wrapper容器添加状态选择器 */
+                #song-lyrics .lyrics-wrapper:hover,
+                #song-lyrics .lyrics-wrapper:active,
+                #song-lyrics .lyrics-wrapper:focus,
+                #song-lyrics .lyrics-wrapper:focus-within,
+                #song-lyrics .lyrics-wrapper:visited,
+                #song-lyrics .lyrics-wrapper:link {
+                    background-color: transparent !important;
+                    border: none !important;
+                    box-shadow: none !important;
+                    transform: none !important;
+                    transition: none !important;
+                    -webkit-backface-visibility: hidden;
+                    backface-visibility: hidden;
+                }
+                
+                /* 歌词段落容器样式 */
+                #song-lyrics .lyrics-paragraph {
+                    position: relative;
+                    padding: 10px 0;
+                    border-radius: 8px;
+                    margin-bottom: 2rem;
+                    background-color: transparent !important;
+                    border: none !important;
+                    box-shadow: none !important;
+                    -webkit-backface-visibility: hidden;
+                    backface-visibility: hidden;
+                }
+                
+                /* 为.lyrics-paragraph容器添加状态选择器 */
+                #song-lyrics .lyrics-paragraph:hover,
+                #song-lyrics .lyrics-paragraph:active,
+                #song-lyrics .lyrics-paragraph:focus,
+                #song-lyrics .lyrics-paragraph:focus-within,
+                #song-lyrics .lyrics-paragraph:visited,
+                #song-lyrics .lyrics-paragraph:link {
+                    background-color: transparent !important;
+                    border: none !important;
+                    box-shadow: none !important;
+                    transform: none !important;
+                    transition: none !important;
+                    -webkit-backface-visibility: hidden;
+                    backface-visibility: hidden;
+                }
+                
+                #song-lyrics .lyric-line {
+                    position: relative;
+                    padding: 8px 0;
+                    text-align: center;
+                    white-space: normal;
+                    word-wrap: break-word;
+                    hyphens: auto;
+                    text-wrap: balance;
+                    max-width: 100%;
+                    margin: 0 auto;
+                    background-color: transparent !important;
+                    border: none !important;
+                    box-shadow: none !important;
+                    color: #4b5563 !important; /* 明确设置文本颜色 */
+                    -webkit-backface-visibility: hidden;
+                    backface-visibility: hidden;
+                }
+                
+                /* 为.lyric-line添加状态选择器，确保任何状态下都不会有颜色变化 */
+                #song-lyrics .lyric-line:hover,
+                #song-lyrics .lyric-line:active,
+                #song-lyrics .lyric-line:focus,
+                #song-lyrics .lyric-line:focus-within,
+                #song-lyrics .lyric-line:visited,
+                #song-lyrics .lyric-line:link {
+                    background-color: transparent !important;
+                    border: none !important;
+                    box-shadow: none !important;
+                    color: #4b5563 !important;
+                    cursor: default !important;
+                    -webkit-backface-visibility: hidden;
+                    backface-visibility: hidden;
+                }
+                
+                /* 针对歌词相关元素的样式规则 - 防止背景变蓝 */
+                #song-lyrics,
+                #song-lyrics .lyrics-wrapper,
+                #song-lyrics .lyrics-wrapper .lyrics-paragraph,
+                #song-lyrics .lyrics-wrapper .lyrics-paragraph .lyric-line,
+                #song-lyrics .lyrics-wrapper .lyrics-paragraph .lyric-line .lyric-text,
+                #song-lyrics .lyrics-wrapper .lyrics-paragraph .lyric-line .timestamp {
+                    color: #4b5563 !important; /* 明确设置文本颜色为深灰色 */
+                    background-color: transparent !important;
+                    text-decoration: none !important;
+                    outline: none !important;
+                    border: none !important;
+                    cursor: default !important;
+                    -webkit-user-select: none !important;
+                    -moz-user-select: none !important;
+                    -ms-user-select: none !important;
+                    user-select: none !important;
+                    -webkit-tap-highlight-color: transparent !important;
+                    -webkit-touch-callout: none !important;
+                    pointer-events: none !important;
+                    -webkit-text-fill-color: #4b5563 !important; /* 防止文本填充颜色变化 */
+                    -webkit-text-stroke-color: transparent !important;
+                    -webkit-backface-visibility: hidden;
+                    backface-visibility: hidden;
+                    -webkit-transform: translateZ(0);
+                    transform: translateZ(0);
+                    /* 添加额外的防止背景色变化的属性 */
+                    background-image: none !important;
+                    background-attachment: scroll !important;
+                    background-clip: border-box !important;
+                    background-origin: padding-box !important;
+                    background-position: 0% 0% !important;
+                    background-repeat: repeat !important;
+                    background-size: auto auto !important;
+                }
+                
+                /* 确保没有任何动画或过渡效果会影响歌词区域文本颜色 */
+                #song-lyrics,
+                #song-lyrics .lyrics-wrapper,
+                #song-lyrics .lyrics-wrapper .lyrics-paragraph,
+                #song-lyrics .lyrics-wrapper .lyrics-paragraph .lyric-line,
+                #song-lyrics .lyrics-wrapper .lyrics-paragraph .lyric-line .lyric-text,
+                #song-lyrics .lyrics-wrapper .lyrics-paragraph .lyric-line .timestamp {
+                    animation: none !important;
+                    transition: none !important;
+                    transform: none !important;
+                    will-change: auto !important; /* 防止浏览器优化导致的意外效果 */
+                    -webkit-animation: none !important;
+                    -webkit-transition: none !important;
+                    -webkit-transform: none !important;
+                }
+                
+                /* 禁用歌词区域的选择高亮 - 最高优先级 */
+                #song-lyrics ::selection,
+                #song-lyrics ::-moz-selection {
+                    background-color: transparent !important;
+                    color: inherit !important;
+                }
+                
+                /* 添加全局选择样式覆盖，确保没有蓝色背景 - 增强版 */
+                *, 
+                *::before, 
+                *::after {
+                    /* 防止触摸设备上的蓝色高亮 */
+                    -webkit-tap-highlight-color: transparent !important;
+                    -webkit-touch-callout: none !important;
+                }
+                
+                /* 禁用全局的文本选择高亮，防止任何地方出现蓝色背景 */
+                ::selection, 
+                ::-moz-selection {
+                    background-color: transparent !important;
+                    color: inherit !important;
+                }
+                
+                /* 为歌词卡片容器添加样式 - 确保不影响背景色 */
+                .gradient-border {
+                    position: relative;
+                    border-radius: 0.75rem;
+                    z-index: 1;
+                    background-color: transparent !important;
+                }
+                
+                .gradient-border::before {
+                    content: '';
+                    position: absolute;
+                    inset: -2px;
+                    z-index: -1;
+                    border-radius: 0.875rem;
+                    background: linear-gradient(90deg, #1a56db, #60a5fa, #1a56db);
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                    animation: gradientMove 5s ease infinite;
+                }
+                
+                .gradient-border:hover::before {
+                    opacity: 1;
+                }
+                
+                /* 移动端响应式调整 */
+                @media (max-width: 768px) {
+                    #song-lyrics .lyrics-wrapper {
+                        max-width: 100%;
+                    }
+                    
+                    #song-lyrics .lyric-line {
+                        font-size: 0.95rem;
+                    }
+                }
+                
+                /* 添加媒体查询，特别针对触摸设备优化 */
+                @media (hover: none) and (pointer: coarse) {
+                    #song-lyrics,
+                    #song-lyrics .lyrics-wrapper,
+                    #song-lyrics .lyrics-wrapper .lyrics-paragraph,
+                    #song-lyrics .lyrics-wrapper .lyrics-paragraph .lyric-line,
+                    #song-lyrics .lyrics-wrapper .lyrics-paragraph .lyric-line .lyric-text,
+                    #song-lyrics .lyrics-wrapper .lyrics-paragraph .lyric-line .timestamp {
+                        touch-action: manipulation;
+                        -webkit-touch-action: manipulation;
+                    }
+                }
+                
+                /* 额外添加：确保整个文档都没有选择高亮 */
+                html,
+                body {
+                    -webkit-tap-highlight-color: transparent !important;
+                    -webkit-touch-callout: none !important;
+                    -webkit-user-select: none !important;
+                    -moz-user-select: none !important;
+                    -ms-user-select: none !important;
+                    user-select: none !important;
+                }
+                
+                /* 确保文本内容不能被选择 */
+                body {
+                    -webkit-user-select: none !important;
+                    -moz-user-select: none !important;
+                    -ms-user-select: none !important;
+                    user-select: none !important;
+                }
+                
+                /* 针对任何可能的交互元素添加样式 */
+                [onclick],
+                [ondblclick],
+                [onmousedown],
+                [onmouseup],
+                [onmouseover],
+                [onmouseout],
+                [onmousemove],
+                [ontouchstart],
+                [ontouchend],
+                [ontouchmove] {
+                    -webkit-tap-highlight-color: transparent !important;
+                }
+            `;
+        }
+        
+        // 增强的歌词获取和显示
+        function loadAndDisplayLyrics(songId, songLyrics) {
+            // 优先使用传入的歌词，如果没有则获取
+            const lyrics = songLyrics || getLyricsById(songId);
+            displayLyricsNicely(lyrics);
+        }
+
+        // 歌曲分析报告模态框
+        const analysisModal = document.createElement('div');
+        analysisModal.id = 'analysis-modal';
+        analysisModal.className = 'fixed inset-0 bg-gray-900 opacity-0 z-50 flex items-center justify-center hidden transition-opacity duration-300';
+        analysisModal.innerHTML = `
+            <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col transform transition-all duration-300 scale-95 translate-y-4">
+                <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-primary/5 to-secondary/5">
+                    <h3 class="text-xl font-bold text-gray-800 flex items-center">
+                        <i class="fa fa-bar-chart text-primary mr-2"></i> 歌曲分析报告
+                    </h3>
+                    <button id="close-analysis-modal" class="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100 transition-colors">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div id="analysis-content" class="flex-1 overflow-y-auto p-6">
+                    <!-- 分析报告内容将在这里动态加载 -->
+                    <div class="flex justify-center items-center h-full">
+                        <div class="text-center">
+                            <div class="w-16 h-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-6"></div>
+                            <p class="text-gray-600 text-lg">加载分析报告中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(analysisModal);
+
+        // 根据歌曲标题获取对应的HTML文件
+        async function getAnalysisReportFile(songTitle) {
+            try {
+                // 优先使用服务器返回的HTML文件路径
+                const globalSongData = window.currentSongData || currentSongData;
+                if (globalSongData && globalSongData.htmlFilePath) {
+                    console.log('使用服务器返回的HTML文件路径:', globalSongData.htmlFilePath);
+                    // 提取文件名部分
+                    const filePath = globalSongData.htmlFilePath;
+                    const fileName = filePath.split('/').pop();
+                    return fileName;
+                }
+                
+                // 如果没有全局数据中的文件路径，返回null表示正在加载
+                console.log('分析报告文件路径正在加载中...');
+                return null;
+            } catch (error) {
+                console.error('获取分析报告文件失败:', error);
+                return null;
+            }
+        }
+        
+        // 加载并显示歌曲分析报告
+        async function loadAndDisplayAnalysisReport(songTitle) {
+            const analysisContent = document.getElementById('analysis-content');
+            
+            try {
+                // 显示加载状态
+                analysisContent.innerHTML = `
+                    <div class="flex justify-center items-center h-full">
+                        <div class="text-center">
+                            <div class="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
+                            <p class="text-gray-600">加载分析报告中...</p>
+                        </div>
+                    </div>
+                `;
+                
+                // 获取当前歌曲对应的HTML文件路径
+                const fileName = await getAnalysisReportFile(songTitle);
+                
+                if (!fileName) {
+                    throw new Error('未找到分析报告文件');
+                }
+                
+                // 构建完整的文件路径
+                const filePath = `/HTML/${fileName}`;
+                console.log('尝试加载分析报告文件:', filePath);
+                
+                // 直接显示原始HTML内容，不做任何格式修改
+                const response = await fetch(filePath);
+                
+                if (!response.ok) {
+                    throw new Error(`无法加载分析报告文件，状态码: ${response.status}`);
+                }
+                
+                const htmlContent = await response.text();
+                
+                // 直接设置原始HTML内容，不做任何修改
+                analysisContent.innerHTML = htmlContent;
+                
+            } catch (error) {
+                console.error('加载分析报告失败:', error);
+                
+                analysisContent.innerHTML = `
+                    <div class="flex flex-col justify-center items-center h-full p-4">
+                        <div class="text-amber-500 text-4xl mb-4">⚠️</div>
+                        <p class="text-gray-700 mb-2">无法加载分析报告</p>
+                        <p class="text-sm text-gray-500 mb-4">${error.message}</p>
+                        <button id="retry-analysis-btn" class="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-dark transition-colors">
+                            重试加载
+                        </button>
+                    </div>
+                `;
+                
+                // 添加重试按钮事件监听
+                document.getElementById('retry-analysis-btn').addEventListener('click', function() {
+                    loadAndDisplayAnalysisReport(songTitle);
+                });
+            }
+        }
+        
+        // 歌曲分析报告按钮点击事件
+document.getElementById('analysis-report-btn').addEventListener('click', function() {
+            const songTitle = document.getElementById('song-title').textContent;
+            const analysisModal = document.getElementById('analysis-modal');
+            
+            // 防止背景滚动
+            document.body.style.overflow = 'hidden';
+            
+            // 显示模态框并添加动画效果
+            analysisModal.classList.remove('hidden');
+            
+            setTimeout(() => {
+                analysisModal.classList.add('opacity-100');
+                const modalContent = analysisModal.querySelector('.bg-white');
+                modalContent.classList.remove('scale-95', 'translate-y-4');
+                modalContent.classList.add('scale-100', 'translate-y-0');
+            }, 10);
+            
+            // 加载并显示真实的分析报告
+            loadAndDisplayAnalysisReport(songTitle);
+        });
+
+        // 关闭分析报告模态框
+document.getElementById('close-analysis-modal').addEventListener('click', function() {
+            closeAnalysisModal();
+        });
+
+        // 点击模态框背景关闭模态框
+document.getElementById('analysis-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAnalysisModal();
+            }
+        });
+
+        // 关闭模态框函数
+        function closeAnalysisModal() {
+            const analysisModal = document.getElementById('analysis-modal');
+            const modalContent = analysisModal.querySelector('.bg-white');
+            
+            // 添加关闭动画
+            analysisModal.classList.remove('opacity-100');
+            modalContent.classList.remove('scale-100', 'translate-y-0');
+            modalContent.classList.add('scale-95', 'translate-y-4');
+            
+            // 延迟隐藏
+            setTimeout(() => {
+                analysisModal.classList.add('hidden');
+                // 恢复背景页面滚动
+                document.body.style.overflow = '';
+            }, 300);
+        }
+        
+        // 初始化乐谱显示和下载功能
+        function initSheetMusicFunctions() {
+            // 为下载乐谱按钮添加点击事件监听器
+            const downloadBtn = document.getElementById('download-btn');
+            if (downloadBtn) {
+                downloadBtn.addEventListener('click', function() {
+                    try {
+                        downloadSheetMusic();
+                    } catch (error) {
+                        console.error('下载乐谱时发生错误:', error);
+                        showNotification('error', '下载失败', '乐谱下载过程中发生错误，请稍后重试');
+                    }
+                });
+            }
+            
+            // 为查看完整曲谱按钮添加点击事件监听器
+            const fullSheetMusicBtn = document.querySelector('button:has(.fa-expand)');
+            if (fullSheetMusicBtn) {
+                fullSheetMusicBtn.addEventListener('click', function() {
+                    try {
+                        showFullSheetMusic();
+                    } catch (error) {
+                        console.error('显示完整曲谱时发生错误:', error);
+                        showNotification('error', '显示失败', '曲谱显示过程中发生错误，请稍后重试');
+                    }
+                });
+            }
+        }
+        
+        // 显示通知消息 - 增强视觉效果和交互
+        function showNotification(type, title, message) {
+            // 检查是否已存在通知元素
+            let notification = document.querySelector('.notification');
+            if (notification) {
+                clearTimeout(notification.timeout);
+                document.body.removeChild(notification);
+            }
+            
+            // 创建新的通知元素
+            notification = document.createElement('div');
+            
+            // 根据类型设置样式和图标
+            let bgColor, icon, borderColor, shadowColor;
+            switch(type) {
+                case 'success':
+                    bgColor = 'bg-green-500';
+                    borderColor = 'border-green-600';
+                    shadowColor = '';
+                    icon = 'fa-check-circle';
+                    break;
+                case 'error':
+                    bgColor = 'bg-red-500';
+                    borderColor = 'border-red-600';
+                    shadowColor = '';
+                    icon = 'fa-exclamation-circle';
+                    break;
+                case 'warning':
+                    bgColor = 'bg-yellow-500';
+                    borderColor = 'border-yellow-600';
+                    shadowColor = '';
+                    icon = 'fa-exclamation-triangle';
+                    break;
+                case 'info':
+                    bgColor = 'bg-blue-500';
+                    borderColor = 'border-blue-600';
+                    shadowColor = '';
+                    icon = 'fa-info-circle';
+                    break;
+                default:
+                    bgColor = 'bg-gray-500';
+                    borderColor = 'border-gray-600';
+                    shadowColor = '';
+                    icon = 'fa-bell';
+            }
+            
+            // 增强的通知样式 - 带有玻璃态效果和光晕
+            notification.className = `notification fixed top-6 right-6 ${bgColor} text-white px-5 py-4 rounded-xl shadow-2xl z-50 transform transition-all duration-500 ease-out translate-x-full flex items-start space-x-4 border-l-4 ${borderColor} ${shadowColor}`;
+            notification.innerHTML = `
+                <div class="relative">
+                    <i class="fa ${icon} text-2xl mt-0.5"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="font-bold text-lg mb-1">${title}</p>
+                    <p class="text-sm">${message}</p>
+                </div>
+                <button class="notification-close text-white hover:text-white transition-colors ml-2 focus:outline-none focus:ring-2 focus:ring-white rounded-full p-1">
+                    <i class="fa fa-times text-lg"></i>
+                </button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // 显示动画 - 添加弹性效果
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+                notification.style.transition = 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            }, 10);
+            
+            // 为关闭按钮添加事件监听
+            notification.querySelector('.notification-close').addEventListener('click', () => {
+                notification.style.transform = 'translateX(100%)';
+                notification.style.transition = 'transform 0.3s ease-out';
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            });
+            
+            // 自动隐藏 - 添加悬停暂停功能
+            notification.timeout = setTimeout(() => {
+                hideNotification(notification);
+            }, 6000);
+            
+            // 添加悬停暂停功能
+            notification.addEventListener('mouseenter', () => {
+                clearTimeout(notification.timeout);
+            });
+            
+            notification.addEventListener('mouseleave', () => {
+                notification.timeout = setTimeout(() => {
+                    hideNotification(notification);
+                }, 3000);
+            });
+        }
+        
+        // 隐藏通知的辅助函数
+        function hideNotification(notification) {
+            if (!notification || !document.body.contains(notification)) return;
+            
+            notification.style.transform = 'translateX(100%)';
+            notification.style.transition = 'transform 0.3s ease-out';
+            
+            setTimeout(() => {
+                if (document.body.contains(notification)) {
+                    document.body.removeChild(notification);
+                }
+            }, 300);
+        }
+        
+        // 下载乐谱功能
+        function downloadSheetMusic() {
+            const songData = window.currentSongData;
+            if (!songData || !songData.sheetMusicPath) {
+                showNotification('error', '下载失败', '该歌曲暂无乐谱文件');
+                return;
+            }
+            
+            try {
+                // 创建一个临时的a标签用于下载
+                const link = document.createElement('a');
+                link.href = songData.sheetMusicPath;
+                link.download = `${songData.title || '乐谱文件'}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showNotification('success', '下载成功', '乐谱文件已开始下载');
+            } catch (error) {
+                console.error('下载乐谱失败:', error);
+                showNotification('error', '下载失败', '乐谱文件下载出错，请稍后重试');
+            }
+        }
+        
+        // 显示完整曲谱功能
+        function showFullSheetMusic() {
+            const songData = window.currentSongData;
+            if (!songData || !songData.sheetMusicPath) {
+                showNotification('error', '查看失败', '该歌曲暂无乐谱文件');
+                return;
+            }
+            
+            // 在新标签页中打开乐谱文件
+            window.open(songData.sheetMusicPath, '_blank');
+        }
+        
+        // 更新乐谱预览
+        function updateSheetMusicPreview(songData) {
+            const sheetMusicPreview = document.getElementById('sheet-music-preview');
+            if (!sheetMusicPreview) return;
+            
+            if (songData && songData.sheetMusicPreviewPath) {
+                // 如果有预览图路径，使用预览图
+                sheetMusicPreview.src = songData.sheetMusicPreviewPath;
+                sheetMusicPreview.style.display = 'block';
+            } else if (songData && songData.sheetMusicPath) {
+                // 如果没有预览图但有乐谱文件，根据文件类型决定显示方式
+                const fileExtension = songData.sheetMusicPath.split('.').pop().toLowerCase();
+                if (['jpg', 'jpeg', 'png'].includes(fileExtension)) {
+                    // 图片格式的乐谱可以直接预览
+                    sheetMusicPreview.src = songData.sheetMusicPath;
+                    sheetMusicPreview.style.display = 'block';
+                } else {
+                    // PDF等格式的乐谱显示图标
+                    sheetMusicPreview.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48cGF0aCBkPSJNMjEgMTF2OGEyIDIgMCAwIDEtMiAyaC0xNGEyIDIgMCAwIDEtMi0yVjUaMiAyIDAgMCAxIDIgMmgxNkwyMSAxMVoiIGZpbGw9IiMxYTYwZmEiLz48cGF0aCBkPSJNMTggMTJ2Nmg0di02aC00em00LTF2OGgtNHYtOGg0eiIgZmlsbD0iIzBkNWQxZCIvPjxwYXRoIGQ9Ik0xMCAxMlY2SDh2Nmgyem0wIDhoMnYtNmgtMnY2ek01IDE0aDJ2MmgtMlYxNHptMCAyaDJ2MmgtMlYxNnptMCAySDl2Mkg1di0yek0xMCAxNmg0di0yaC00djJ6IiBmaWxsPSIjMzJmNWY3Ii8+PC9zdmc+';
+                    sheetMusicPreview.style.display = 'block';
+                }
+            } else {
+                // 没有乐谱文件时显示提示
+                sheetMusicPreview.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSI2IiBmaWxsPSIjZjRmNWY3Ii8+PHBhdGggZD0iTTkgNmg2djJoLTZWMnoiIGZpbGw9IiM0MDNlMzQiLz48L3N2Zz4=';
+                sheetMusicPreview.style.display = 'block';
+            }
+        }
+
+        // 添加波纹效果
+        function addRippleEffect(button) {
+            button.addEventListener('click', function(e) {
+                // 创建波纹元素
+                const ripple = document.createElement('span');
+                ripple.className = 'absolute rounded-full bg-primary transform -translate-x-1/2 -translate-y-1/2 animate-ripple';
+                
+                // 计算波纹大小和位置
+                const diameter = Math.max(button.clientWidth, button.clientHeight);
+                const radius = diameter / 2;
+                
+                // 设置波纹样式
+                ripple.style.width = ripple.style.height = `${diameter}px`;
+                ripple.style.left = `${e.clientX - button.getBoundingClientRect().left - radius}px`;
+                ripple.style.top = `${e.clientY - button.getBoundingClientRect().top - radius}px`;
+                
+                // 添加到按钮并在动画结束后移除
+                button.appendChild(ripple);
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            });
+        }
+        
+        // 处理收藏按钮点击事件
+        function handleFavoriteClick(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const btn = this;
+            const songId = btn.getAttribute('data-song-id');
+            
+            // 添加点击反馈动画
+            btn.classList.add('scale-90');
+            setTimeout(() => {
+                btn.classList.remove('scale-90');
+            }, 200);
+            
+            try {
+                // 检查是否已经收藏
+                let favorites = JSON.parse(localStorage.getItem('favoriteSongs') || '[]');
+                const isFavorite = favorites.includes(songId);
+                
+                if (isFavorite) {
+                    // 取消收藏
+                    favorites = favorites.filter(id => id !== songId);
+                    btn.classList.remove('text-red-500');
+                    btn.classList.add('text-gray-400');
+                    showNotification('info', '已取消收藏', '已从收藏列表中移除');
+                } else {
+                    // 添加收藏
+                    favorites.push(songId);
+                    btn.classList.remove('text-gray-400');
+                    btn.classList.add('text-red-500');
+                    showNotification('success', '收藏成功', '已添加到收藏列表');
+                }
+                
+                // 保存到本地存储
+                localStorage.setItem('favoriteSongs', JSON.stringify(favorites));
+                
+            } catch (error) {
+                console.error('收藏操作失败:', error);
+                showNotification('error', '操作失败', '收藏功能暂时不可用，请稍后再试');
+            }
+        }
+        
+        // 处理分享按钮点击事件
+        function handleShareClick(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const btn = this;
+            
+            // 添加点击反馈动画
+            btn.classList.add('scale-90');
+            setTimeout(() => {
+                btn.classList.remove('scale-90');
+            }, 200);
+            
+            // 模拟分享功能
+            try {
+                // 获取当前页面URL
+                const currentUrl = window.location.href;
+                
+                // 模拟复制到剪贴板
+                navigator.clipboard.writeText(currentUrl).then(() => {
+                    showNotification('success', '分享成功', '链接已复制到剪贴板');
+                }).catch(err => {
+                    console.error('无法复制链接:', err);
+                    showNotification('error', '分享失败', '请手动复制链接');
+                });
+            } catch (error) {
+                console.error('分享操作失败:', error);
+                showNotification('error', '分享失败', '请稍后再试');
+            }
+        }
+        
+        // 加载最新上传的推荐歌曲
+        async function loadLatestUploadedSongs() {
+            try {
+                // 从API获取最新上传的曲目
+                // 使用与服务器相同的端口
+        const port = window.location.port || '3004';
+        const response = await fetch(`http://localhost:${port}/api/songs?page=1&pageSize=3&sort=newest`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('最新歌曲API请求状态:', response.status);
+                
+                if (!response.ok) {
+                    console.error('获取最新歌曲失败:', response.status);
+                    throw new Error('获取最新歌曲失败');
+                }
+                
+                const responseData = await response.json();
+                console.log('最新歌曲API响应数据:', responseData);
+                
+                // 检查响应数据格式
+                if (!responseData.success || !responseData.data) {
+                    console.error('最新歌曲API返回数据格式不正确:', responseData);
+                    throw new Error('最新歌曲API返回数据格式不正确');
+                }
+                
+                // 确保latestSongs是一个数组
+                let latestSongs = responseData.data;
+                if (!Array.isArray(latestSongs)) {
+                    console.error('最新歌曲数据不是数组，尝试获取items属性:', latestSongs);
+                    // 尝试从items属性获取数组
+                    latestSongs = Array.isArray(latestSongs.items) ? latestSongs.items : [];
+                }
+                
+                const latestSongsContainer = document.getElementById('latest-songs');
+                if (!latestSongsContainer) return;
+                
+                // 清空容器
+                latestSongsContainer.innerHTML = '';
+                
+                // 如果没有数据，显示提示信息
+                if (!latestSongs || latestSongs.length === 0) {
+                    latestSongsContainer.innerHTML = `
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fa fa-music text-4xl mb-2"></i>
+                            <p>暂无推荐歌曲</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // 添加歌曲卡片
+                latestSongs.forEach(song => {
+                    // 确保song对象有必要的属性
+                    const safeSong = {
+                        id: song.id || 'unknown',
+                        title: song.title || '未知标题',
+                        composer: song.composer || song.singer || '未知作者',
+                        coverUrl: song.coverUrl || song.imageUrl || song.cover || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48cGF0aCBkPSJNNCA0aDE2djE2SDQuMCIgZmlsbD0iIzFhNjBmYSIvPjxwYXRoIGQ9Ik0xMiAxNmMxLjIgMCAyLjItMSA0LjEtMnoiIGZpbGw9IiNmNWYxZjgiLz48L3N2Zz4='
+                    };
+                    
+                    const songCard = document.createElement('div');
+                    // 改进的样式类，确保卡片显示正确
+                    songCard.className = 'song-card bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer p-3 border border-gray-100';
+                    songCard.setAttribute('data-song-id', safeSong.id);
+                    
+                    songCard.innerHTML = `
+                        <div class="flex items-center gap-3 w-full">
+                            <div class="relative w-20 h-20">
+                                <img src="${safeSong.coverUrl}" alt="${safeSong.title}" class="w-full h-full object-cover rounded-lg">
+                                <button class="absolute top-0 right-0 p-1.5 rounded-full bg-white/80 backdrop-blur-sm hover:text-red-600 transition-colors favorite-btn text-gray-400">
+                                    <i class="fa fa-heart"></i>
+                                </button>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-bold text-gray-800 truncate text-base">${safeSong.title}</h4>
+                                <p class="text-sm text-gray-500 truncate">${safeSong.composer}</p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // 添加点击事件
+                    songCard.addEventListener('click', function(e) {
+                        // 如果点击的是收藏按钮，不触发页面跳转
+                        if (e.target.closest('.favorite-btn')) {
+                            e.stopPropagation();
+                            const btn = e.target.closest('.favorite-btn');
+                            btn.classList.toggle('text-red-500');
+                            btn.classList.toggle('text-gray-400');
+                            showNotification('success', '收藏成功', '已添加到收藏列表');
+                        } else {
+                            // 跳转到歌曲详情页
+                            window.location.href = `song-detail.html?id=${safeSong.id}`;
+                        }
+                    });
+                    
+                    latestSongsContainer.appendChild(songCard);
+                });
+                
+            } catch (error) {
+                console.error('加载最新歌曲失败:', error);
+                
+                // 出错时显示默认内容
+                const latestSongsContainer = document.getElementById('latest-songs');
+                if (latestSongsContainer) {
+                    // 使用模拟数据作为后备
+                    const mockLatestSongs = [
+                        {
+                            id: 'song001',
+                            title: '茉莉花',
+                            singer: '宋祖英',
+                            cover: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48cGF0aCBkPSJNNCA0aDE2djE2SDQuMCIgZmlsbD0iIzFhNjBmYSIvPjxwYXRoIGQ9Ik0xMiAxNmMxLjIgMCAyLjItMSA0LjEtMnoiIGZpbGw9IiNmNWYxZjgiLz48L3N2Zz4='
+                        },
+                        {
+                            id: 'song002',
+                            title: '我爱你中国',
+                            singer: '殷秀梅',
+                            cover: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48cGF0aCBkPSJNNCA0aDE2djE2SDQuMCIgZmlsbD0iIzFhNjBmYSIvPjxwYXRoIGQ9Ik0xMiAxNmMxLjIgMCAyLjItMSA0LjEtMnoiIGZpbGw9IiNmNWYxZjgiLz48L3N2Zz4='
+                        },
+                        {
+                            id: 'song003',
+                            title: '映山红',
+                            singer: '邓玉华',
+                            cover: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48cGF0aCBkPSJNNCA0aDE2djE2SDQuMCIgZmlsbD0iIzFhNjBmYSIvPjxwYXRoIGQ9Ik0xMiAxNmMxLjIgMCAyLjItMSA0LjEtMnoiIGZpbGw9IiNmNWYxZjgiLz48L3N2Zz4='
+                        }
+                    ];
+                    
+                    // 清空容器
+                    latestSongsContainer.innerHTML = '';
+                    
+                    // 添加模拟歌曲卡片
+                    mockLatestSongs.forEach(song => {
+                        const songCard = document.createElement('div');
+                        // 改进的样式类，确保卡片显示正确
+                        songCard.className = 'song-card bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer p-3 border border-gray-100';
+                        songCard.setAttribute('data-song-id', song.id);
+                        
+                        songCard.innerHTML = `
+                            <div class="flex items-center gap-3 w-full">
+                                <div class="relative w-20 h-20">
+                                    <img src="${song.cover}" alt="${song.title}" class="w-full h-full object-cover rounded-lg">
+                                    <button class="absolute top-0 right-0 p-1.5 rounded-full bg-white/80 backdrop-blur-sm hover:text-red-600 transition-colors favorite-btn text-gray-400">
+                                        <i class="fa fa-heart"></i>
+                                    </button>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-bold text-gray-800 truncate text-base">${song.title}</h4>
+                                    <p class="text-sm text-gray-500 truncate">${song.singer}</p>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // 添加点击事件
+                        songCard.addEventListener('click', function(e) {
+                            // 如果点击的是收藏按钮，不触发页面跳转
+                            if (e.target.closest('.favorite-btn')) {
+                                e.stopPropagation();
+                                const btn = e.target.closest('.favorite-btn');
+                                btn.classList.toggle('text-red-500');
+                                btn.classList.toggle('text-gray-400');
+                                showNotification('success', '收藏成功', '已添加到收藏列表');
+                            } else {
+                                // 跳转到歌曲详情页
+                                window.location.href = `song-detail.html?id=${song.id}`;
+                            }
+                        });
+                        
+                        latestSongsContainer.appendChild(songCard);
+                    });
+                }
+            }
+        }
+        
+        // 处理评论按钮点击事件
+        function handleCommentClick(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const btn = this;
+            
+            // 添加点击反馈动画
+            btn.classList.add('scale-90');
+            setTimeout(() => {
+                btn.classList.remove('scale-90');
+            }, 200);
+            
+            // 模拟评论功能
+            try {
+                // 显示评论区或提示
+                showNotification('info', '评论区', '即将跳转到评论区...');
+                
+                // 模拟滚动到评论区
+                setTimeout(() => {
+                    const commentsSection = document.querySelector('#comments-section');
+                    if (commentsSection) {
+                        commentsSection.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                        showNotification('error', '评论区不存在', '该歌曲暂无评论功能');
+                    }
+                }, 1000);
+            } catch (error) {
+                console.error('评论操作失败:', error);
+                showNotification('error', '操作失败', '请稍后再试');
+            }
+        }
+        
+        // 处理评论提交
+        function handleCommentSubmit() {
+            const commentInput = document.getElementById('comment-input');
+            const commentsList = document.getElementById('comments-list');
+            
+            if (!commentInput || !commentsList) return;
+            
+            const commentText = commentInput.value.trim();
+            
+            if (!commentText) {
+                showNotification('warning', '提示', '请输入评论内容');
+                return;
+            }
+            
+            // 模拟提交评论
+            try {
+                // 生成新评论HTML
+                const now = new Date();
+                const dateString = `${now.getMonth() + 1}月${now.getDate()}日`;
+                const randomLikes = Math.floor(Math.random() * 10);
+                const randomName = ['匿名用户', '音乐爱好者', '歌唱家', '艺考学员', '音乐老师'][Math.floor(Math.random() * 5)];
+                
+                const newComment = document.createElement('div');
+                newComment.className = 'comment-item border-b border-gray-100 pb-6';
+                newComment.innerHTML = `
+                    <div class="flex items-start gap-4">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSI2IiBmaWxsPSIjMTY2OGZmIi8+PC9zdmc+" alt="用户头像" class="w-10 h-10 rounded-full object-cover">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="font-semibold text-gray-800">${randomName}</span>
+                                <span class="text-xs text-gray-400">${dateString}</span>
+                            </div>
+                            <p class="text-gray-600 mb-2">${commentText}</p>
+                            <div class="flex items-center gap-4 text-sm text-gray-400">
+                                <button class="hover:text-primary transition-colors flex items-center gap-1">
+                                    <i class="fa fa-thumbs-up"></i>
+                                    <span>${randomLikes}</span>
+                                </button>
+                                <button class="hover:text-primary transition-colors">回复</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // 找到评论列表的容器
+                const commentsContainer = commentsList.querySelector('.space-y-6');
+                if (commentsContainer) {
+                    // 将新评论添加到列表顶部
+                    commentsContainer.insertBefore(newComment, commentsContainer.firstChild);
+                    
+                    // 添加淡入动画
+                    newComment.style.opacity = '0';
+                    newComment.style.transform = 'translateY(10px)';
+                    newComment.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                    
+                    setTimeout(() => {
+                        newComment.style.opacity = '1';
+                        newComment.style.transform = 'translateY(0)';
+                    }, 10);
+                }
+                
+                // 清空输入框
+                commentInput.value = '';
+                
+                // 显示成功提示
+                showNotification('success', '评论成功', '你的评论已发布');
+                
+            } catch (error) {
+                console.error('提交评论失败:', error);
+                showNotification('error', '评论失败', '请稍后再试');
+            }
+        }
+        
+        // 处理加载更多评论
+        function handleLoadMoreComments() {
+            const loadMoreBtn = document.getElementById('load-more-comments');
+            
+            if (!loadMoreBtn) return;
+            
+            // 添加点击反馈
+            loadMoreBtn.disabled = true;
+            loadMoreBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>加载中...';
+            
+            // 模拟加载更多评论
+            setTimeout(() => {
+                try {
+                    const commentsList = document.getElementById('comments-list');
+                    const commentsContainer = commentsList.querySelector('.space-y-6');
+                    
+                    if (!commentsContainer) {
+                        throw new Error('评论列表容器不存在');
+                    }
+                    
+                    // 移除最后一个评论的下边框
+                    const lastComment = commentsContainer.lastElementChild;
+                    if (lastComment) {
+                        lastComment.classList.remove('border-b', 'border-gray-100', 'pb-6');
+                    }
+                    
+                    // 生成模拟的更多评论
+                    const mockComments = [
+                        {
+                            name: '音乐爱好者',
+                            date: '2周前',
+                            content: '这首歌的歌词很有深度，旋律也很优美，非常适合练习声乐技巧。',
+                            likes: 3
+                        },
+                        {
+                            name: '艺考学员',
+                            date: '3周前',
+                            content: '我在准备艺考，这首歌是我的备选曲目之一。感谢提供的详细指导！',
+                            likes: 6
+                        }
+                    ];
+                    
+                    // 添加新评论
+                    mockComments.forEach(comment => {
+                        const newComment = document.createElement('div');
+                        newComment.className = 'comment-item border-b border-gray-100 pb-6';
+                        newComment.innerHTML = `
+                            <div class="flex items-start gap-4">
+                                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0Ij48Y2lyY2xlIGN4PSIxOCIgY3k9IjE4IiByPSIzIiBmaWxsPSIjMTY2OGZmIi8+PC9zdmc+" alt="用户头像" class="w-10 h-10 rounded-full object-cover">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="font-semibold text-gray-800">${comment.name}</span>
+                                        <span class="text-xs text-gray-400">${comment.date}</span>
+                                    </div>
+                                    <p class="text-gray-600 mb-2">${comment.content}</p>
+                                    <div class="flex items-center gap-4 text-sm text-gray-400">
+                                        <button class="hover:text-primary transition-colors flex items-center gap-1">
+                                            <i class="fa fa-thumbs-up"></i>
+                                            <span>${comment.likes}</span>
+                                        </button>
+                                        <button class="hover:text-primary transition-colors">回复</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // 添加到列表
+                        commentsContainer.appendChild(newComment);
+                    });
+                    
+                    // 恢复按钮状态
+                    loadMoreBtn.disabled = false;
+                    loadMoreBtn.innerHTML = '加载更多评论';
+                    
+                    // 显示加载成功提示
+                    showNotification('success', '加载成功', '已加载更多评论');
+                    
+                } catch (error) {
+                    console.error('加载更多评论失败:', error);
+                    showNotification('error', '加载失败', '请稍后再试');
+                    loadMoreBtn.disabled = false;
+                    loadMoreBtn.innerHTML = '加载更多评论';
+                }
+            }, 1500);
+        }
+        
+        // 设置移动端菜单
+        function setupMobileMenu() {
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            if (mobileMenuBtn && mobileMenu) {
+                mobileMenuBtn.addEventListener('click', () => {
+                    mobileMenu.classList.toggle('hidden');
+                });
+            }
+        }
+        
+        // 初始化应用
+        function initApp() {
+            setupMobileMenu();
+        }
+        
+        // 页面加载完成后执行
+        window.addEventListener('DOMContentLoaded', () => {
+            // 定义全局变量保存当前歌曲数据
+            window.currentSongData = null;
+            
+            // 添加页面加载动画
+            document.body.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+            
+            // 页面元素加载完成后显示页面
+            setTimeout(() => {
+                document.body.classList.remove('opacity-0');
+            }, 200);
+            
+            // 获取URL参数
+            const params = getUrlParams();
+            const songId = params.id || 'default_song';
+            
+            console.log('页面加载完成，获取到的URL参数:', params);
+            console.log('要加载的歌曲ID:', songId);
+            console.log('完整URL:', window.location.href);
+            console.log('页面协议:', window.location.protocol);
+            console.log('主机名:', window.location.hostname);
+            console.log('端口:', window.location.port);
+            console.log('即将调用loadSongDetail函数');
+            
+            // 设置收藏按钮的歌曲ID
+            const favoriteBtn = document.getElementById('favorite-btn');
+            if (favoriteBtn) {
+                favoriteBtn.setAttribute('data-song-id', songId);
+                favoriteBtn.addEventListener('click', handleFavoriteClick);
+                addRippleEffect(favoriteBtn);
+            }
+            
+            // 为分享按钮添加事件监听器
+            const shareBtn = document.getElementById('share-btn');
+            if (shareBtn) {
+                shareBtn.addEventListener('click', handleShareClick);
+                addRippleEffect(shareBtn);
+            }
+            
+            // 为评论按钮添加事件监听器
+            const commentBtn = document.getElementById('comment-btn');
+            if (commentBtn) {
+                commentBtn.addEventListener('click', handleCommentClick);
+                addRippleEffect(commentBtn);
+            }
+            
+            // 为评论提交按钮添加事件监听器
+            const submitCommentBtn = document.getElementById('submit-comment');
+            if (submitCommentBtn) {
+                submitCommentBtn.addEventListener('click', handleCommentSubmit);
+                addRippleEffect(submitCommentBtn);
+            }
+            
+            // 为加载更多评论按钮添加事件监听器
+            const loadMoreCommentsBtn = document.getElementById('load-more-comments');
+            if (loadMoreCommentsBtn) {
+                loadMoreCommentsBtn.addEventListener('click', handleLoadMoreComments);
+                addRippleEffect(loadMoreCommentsBtn);
+            }
+            
+            // 为评论输入框添加回车键提交功能
+            const commentInput = document.getElementById('comment-input');
+            if (commentInput) {
+                commentInput.addEventListener('keydown', function(e) {
+                    // Ctrl+Enter 或 Shift+Enter 提交评论
+                    if ((e.ctrlKey || e.shiftKey) && e.key === 'Enter') {
+                        e.preventDefault();
+                        handleCommentSubmit();
+                    }
+                });
+            }
+            
+            // 加载歌曲详情
+            console.log(`开始调用loadSongDetail(${songId})`);
+            loadSongDetail(songId).then(() => {
+                console.log('loadSongDetail函数执行完成');
+                console.log('当前全局歌曲数据:', window.currentSongData);
+            }).catch(error => {
+                console.error('loadSongDetail函数执行出错:', error);
+            });
+            
+            // 初始化歌词上传功能
+            initLyricsUpload();
+            
+            // 初始化乐谱显示和下载功能
+            initSheetMusicFunctions();
+            
+            // 初始化应用功能
+            initApp();
+            
+            // 页面加载完成后，加载最新上传的推荐歌曲
+            setTimeout(() => {
+                if (document.getElementById('latest-songs')) {
+                    loadLatestUploadedSongs();
+                }
+            }, 1000);
+        });
+    </script>
+    <script src="test-song-detail.js"></script>
+</body>
+</html>

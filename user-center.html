@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仔仔艺考声乐助手 - 个人中心</title>
+    <script>
+        // 确保页面在正确的协议和端口打开
+        if (window.location.protocol !== 'http:') {
+            console.log('检测到错误的协议，正在重定向到正确的URL...');
+            const path = window.location.pathname.split('/').pop();
+            const port = window.location.port || '3004'; // 现在使用3004端口
+            window.location.href = `http://localhost:${port}/${path}`;
+        }
+    </script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- 配置Tailwind自定义颜色 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1a56db',  // 蓝色主题
+                        secondary: '#3b82f6',
+                        accent: '#60a5fa',
+                        dark: '#1e3a8a',
+                        light: '#bfdbfe',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <!-- 自定义样式 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .card-hover {
+                transition: all 0.3s ease;
+            }
+            .card-hover:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            }
+            .btn-primary {
+                @apply bg-primary text-white font-medium px-6 py-3 rounded-lg transition duration-300 hover:bg-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary;
+            }
+            .btn-secondary {
+                @apply bg-white text-primary font-medium px-6 py-3 rounded-lg border border-primary transition duration-300 hover:bg-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary;
+            }
+            .nav-item {
+                @apply px-4 py-2 text-gray-300 hover:text-white transition duration-200;
+            }
+            .nav-item-active {
+                @apply px-4 py-2 text-white border-b-2 border-white font-medium;
+            }
+            .sidebar-item {
+                @apply flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-primary/10 hover:text-primary rounded-lg transition duration-200;
+            }
+            .sidebar-item-active {
+                @apply flex items-center space-x-3 px-4 py-3 bg-primary/10 text-primary font-medium rounded-lg;
+            }
+            .stats-card {
+                @apply bg-white rounded-xl shadow-md p-6 transition duration-300 hover:shadow-lg;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- 导航栏 -->
+    <header class="bg-primary shadow-md">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-music text-2xl text-white"></i>
+                <span class="text-xl font-bold text-white">仔仔艺考声乐助手</span>
+            </div>
+            <nav class="hidden md:flex space-x-1">
+                <a href="index.html" class="nav-item">首页</a>
+                <a href="song-library.html" class="nav-item">曲目库</a>
+                <a href="strategy.html" class="nav-item">备考攻略</a>
+                <a href="user-center.html" class="nav-item-active">个人中心</a>
+                <a href="admin.html" class="nav-item">后台管理</a>
+            </nav>
+            <!-- 用户操作区域已移除，个人中心页面仅对登录用户可见 -->
+            </div>
+            <!-- 用户头像区域 - 已登录状态 -->
+            <div id="user-profile" class="hidden relative">
+                <button id="user-menu-btn" class="flex items-center space-x-2 text-white hover:text-gray-200 transition duration-200">
+                    <img src="https://picsum.photos/id/1005/40/40" alt="用户头像" class="w-8 h-8 rounded-full object-cover border-2 border-white">
+                    <span class="user-name hidden md:inline-block">用户名称</span>
+                    <i class="fa fa-caret-down"></i>
+                </button>
+                <!-- 用户下拉菜单 -->
+                <div id="user-dropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 hidden">
+                    <a href="user-center.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition duration-200">
+                        <i class="fa fa-user-circle mr-2"></i>个人中心
+                    </a>
+                    <div class="border-t border-gray-200 my-1"></div>
+                    <a href="#" id="logout-link" class="block px-4 py-2 text-red-500 hover:bg-red-50 transition duration-200">
+                        <i class="fa fa-sign-out mr-2"></i>退出登录
+                    </a>
+                </div>
+            </div>
+            <!-- 移动端菜单按钮 -->
+            <button class="md:hidden text-white text-xl" id="mobile-menu-button">
+                <i class="fa fa-bars"></i>
+            </button>
+        </div>
+        <!-- 移动端菜单 -->
+        <div class="md:hidden hidden" id="mobile-menu">
+            <a href="index.html" class="block px-4 py-2 bg-primary text-gray-300 hover:text-white border-b border-gray-700">首页</a>
+            <a href="song-library.html" class="block px-4 py-2 bg-primary text-gray-300 hover:text-white border-b border-gray-700">曲目库</a>
+            <a href="strategy.html" class="block px-4 py-2 bg-primary text-gray-300 hover:text-white border-b border-gray-700">备考攻略</a>
+            <a href="user-center.html" class="block px-4 py-2 bg-primary text-white border-b border-gray-700">个人中心</a>
+            <a href="admin.html" class="block px-4 py-2 bg-primary text-gray-300 hover:text-white">后台管理</a>
+        </div>
+    </header>
+
+    <!-- 通知提示组件 -->
+    <div id="notification" class="fixed top-4 right-4 bg-white rounded-lg shadow-lg p-4 flex items-center max-w-md transform translate-x-full transition-transform duration-300 z-50">
+        <i id="notification-icon" class="fa mr-3"></i>
+        <p id="notification-message" class="text-gray-700"></p>
+        <button id="close-notification" class="ml-auto text-gray-400 hover:text-gray-600">
+            <i class="fa fa-times"></i>
+        </button>
+    </div>
+
+    <!-- 主要内容 -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- 页面标题 -->
+        <section class="relative rounded-2xl overflow-hidden mb-8 bg-gradient-to-r from-primary to-dark">
+            <div class="absolute inset-0 opacity-20">
+                <img src="https://picsum.photos/id/1005/1200/200" alt="个人中心背景" class="w-full h-full object-cover" />
+            </div>
+            <div class="relative py-6 px-8 text-center text-white z-10">
+                <h1 class="text-2xl md:text-3xl font-bold text-shadow">我的个人中心</h1>
+            </div>
+        </section>
+
+        <!-- 个人中心布局 -->
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- 左侧侧边栏 -->
+            <div class="lg:w-1/4">
+                <!-- 用户信息卡片 -->
+                <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                    <div class="text-center mb-6">
+                        <div class="relative inline-block mb-4">
+                            <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="用户头像" class="user-avatar w-24 h-24 rounded-full object-cover border-4 border-white shadow-md" />
+                            <div class="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center border-2 border-white">
+                                <i class="fa fa-camera text-white"></i>
+                            </div>
+                        </div>
+                        <h3 class="user-name text-xl font-bold text-gray-800">张小艺</h3>
+                        <p class="user-role text-gray-500">高三学生</p>
+                        <p class="user-location text-gray-500">北京市</p>
+                        <p class="user-bio mt-3 text-gray-600 text-sm">热爱声乐的艺考生，希望能考上理想的音乐院校</p>
+                    </div>
+                    <div class="flex justify-around border-t border-gray-100 pt-4">
+                        <div class="text-center">
+                            <p class="favorites-count text-xl font-bold text-primary">128</p>
+                            <p class="text-sm text-gray-500">收藏曲目</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="strategies-count text-xl font-bold text-primary">36</p>
+                            <p class="text-sm text-gray-500">学习攻略</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="learning-days text-xl font-bold text-primary">12</p>
+                            <p class="text-sm text-gray-500">学习天数</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 侧边栏导航 -->
+                <div class="bg-white rounded-xl shadow-md p-4 mb-6">
+                    <h4 class="text-lg font-bold text-gray-800 mb-3 px-4">个人中心</h4>
+                    <div class="space-y-1">
+                        <a href="#" class="sidebar-item-active">
+                            <i class="fa fa-tachometer w-5 text-center"></i>
+                            <span>学习概览</span>
+                        </a>
+                        <a href="#" class="sidebar-item">
+                            <i class="fa fa-heart w-5 text-center"></i>
+                            <span>我的收藏</span>
+                        </a>
+                        <a href="#" class="sidebar-item">
+                            <i class="fa fa-book w-5 text-center"></i>
+                            <span>学习记录</span>
+                        </a>
+                        <a href="#" class="sidebar-item">
+                            <i class="fa fa-bookmark w-5 text-center"></i>
+                            <span>浏览历史</span>
+                        </a>
+                        <a href="#" class="sidebar-item">
+                            <i class="fa fa-file-text-o w-5 text-center"></i>
+                            <span>我的笔记</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-md p-4">
+                    <h4 class="text-lg font-bold text-gray-800 mb-3 px-4">设置</h4>
+                    <div class="space-y-1">
+                        <a href="#" class="sidebar-item">
+                            <i class="fa fa-user-o w-5 text-center"></i>
+                            <span>个人信息</span>
+                        </a>
+                        <a href="#" class="sidebar-item">
+                            <i class="fa fa-bell-o w-5 text-center"></i>
+                            <span>通知设置</span>
+                        </a>
+                        <a href="#" class="sidebar-item">
+                            <i class="fa fa-cog w-5 text-center"></i>
+                            <span>账号设置</span>
+                        </a>
+                        <a href="logout.html" id="sidebar-logout-link" class="sidebar-item text-red-500">
+                            <i class="fa fa-sign-out w-5 text-center"></i>
+                            <span>退出登录</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧主内容 -->
+            <div class="lg:w-3/4">
+                <!-- 测试用退出登录按钮 -->
+                <div class="fixed bottom-4 right-4 z-40">
+                    <button onclick="localStorage.removeItem('userLoggedIn'); localStorage.removeItem('username'); localStorage.removeItem('userAvatar'); localStorage.removeItem('userId'); document.cookie = 'userLoggedIn=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'; document.cookie = 'username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'; document.cookie = 'userAvatar=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'; alert('已成功退出登录'); window.location.href = 'login.html';" class="bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg">
+                        退出登录（测试按钮）
+                    </button>
+                </div>
+                <!-- 学习统计 -->
+                <section class="mb-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">学习统计</h2>
+                        <div class="flex space-x-2">
+                            <button class="px-3 py-1 bg-primary text-white text-sm rounded-full">本周</button>
+                            <button class="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full hover:bg-primary hover:text-white transition duration-200">本月</button>
+                            <button class="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full hover:bg-primary hover:text-white transition duration-200">全部</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div class="stats-card">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <p class="text-gray-500 text-sm mb-1">学习时长</p>
+                                    <h3 class="stat-value text-2xl font-bold text-gray-800">12.5小时</h3>
+                                </div>
+                                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-primary">
+                                    <i class="fa fa-clock-o"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center mt-4 text-sm">
+                                <span class="text-green-500 flex items-center"><i class="fa fa-arrow-up mr-1"></i> 15%</span>
+                                <span class="text-gray-500 ml-2">较上周</span>
+                            </div>
+                        </div>
+
+                        <div class="stats-card">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <p class="text-gray-500 text-sm mb-1">学习曲目</p>
+                                    <h3 class="stat-value text-2xl font-bold text-gray-800">18首</h3>
+                                </div>
+                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                                    <i class="fa fa-music"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center mt-4 text-sm">
+                                <span class="text-green-500 flex items-center"><i class="fa fa-arrow-up mr-1"></i> 8%</span>
+                                <span class="text-gray-500 ml-2">较上周</span>
+                            </div>
+                        </div>
+
+                        <div class="stats-card">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <p class="text-gray-500 text-sm mb-1">练习次数</p>
+                                    <h3 class="stat-value text-2xl font-bold text-gray-800">32次</h3>
+                                </div>
+                                <div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
+                                    <i class="fa fa-refresh"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center mt-4 text-sm">
+                                <span class="text-green-500 flex items-center"><i class="fa fa-arrow-up mr-1"></i> 23%</span>
+                                <span class="text-gray-500 ml-2">较上周</span>
+                            </div>
+                        </div>
+
+                        <div class="stats-card">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <p class="text-gray-500 text-sm mb-1">完成度</p>
+                                    <h3 class="stat-value text-2xl font-bold text-gray-800">68%</h3>
+                                </div>
+                                <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+                                    <i class="fa fa-check-circle"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center mt-4 text-sm">
+                                <span class="text-green-500 flex items-center"><i class="fa fa-arrow-up mr-1"></i> 12%</span>
+                                <span class="text-gray-500 ml-2">较上周</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 学习趋势图表 -->
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-6">学习趋势</h3>
+                        <div class="h-64 bg-white rounded-lg">
+                            <canvas id="learning-trend-chart"></canvas>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 最近学习 -->
+                <section class="mb-8 section" id="recent-learning-section">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">最近学习</h2>
+                        <a href="#" class="text-primary hover:underline">查看全部</a>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <div class="space-y-6">
+                            <div class="flex items-start gap-4 pb-6 border-b border-gray-100 learning-item">
+                                <div class="relative flex-shrink-0">
+                                    <img src="https://picsum.photos/id/1025/80/80" alt="曲目封面" class="w-16 h-16 rounded-lg object-cover" />
+                                    <div class="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center opacity-0 hover:opacity-100 transition duration-300">
+                                        <i class="fa fa-play text-white text-xl"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <h3 class="text-lg font-bold text-gray-800 mb-1">《美丽的草原我的家》</h3>
+                                            <p class="text-gray-500 text-sm mb-2">德德玛 - 女中音经典曲目</p>
+                                            <div class="flex items-center text-sm text-gray-500">
+                                                <span class="inline-block px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs mr-2">已学习</span>
+                                                <span><i class="fa fa-clock-o mr-1"></i> 30分钟</span>
+                                            </div>
+                                        </div>
+                                        <span class="text-gray-400 text-sm">今天 14:30</span>
+                                    </div>
+                                    <div class="mt-3">
+                                        <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                            <span>完成进度</span>
+                                            <span>85%</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-1.5">
+                                            <div class="bg-primary h-1.5 rounded-full" style="width: 85%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-4 pb-6 border-b border-gray-100 learning-item">
+                                <div class="relative flex-shrink-0">
+                                    <img src="https://picsum.photos/id/1039/80/80" alt="曲目封面" class="w-16 h-16 rounded-lg object-cover" />
+                                    <div class="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center opacity-0 hover:opacity-100 transition duration-300">
+                                        <i class="fa fa-play text-white text-xl"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <h3 class="text-lg font-bold text-gray-800 mb-1">《我和我的祖国》</h3>
+                                            <p class="text-gray-500 text-sm mb-2">李谷一 - 经典爱国歌曲</p>
+                                            <div class="flex items-center text-sm text-gray-500">
+                                                <span class="inline-block px-2 py-1 bg-green-100 text-green-700 rounded text-xs mr-2">正在学习</span>
+                                                <span><i class="fa fa-clock-o mr-1"></i> 20分钟</span>
+                                            </div>
+                                        </div>
+                                        <span class="text-gray-400 text-sm">昨天 16:45</span>
+                                    </div>
+                                    <div class="mt-3">
+                                        <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                            <span>完成进度</span>
+                                            <span>45%</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-1.5">
+                                            <div class="bg-secondary h-1.5 rounded-full" style="width: 45%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-4 learning-item">
+                                <div class="relative flex-shrink-0">
+                                    <img src="https://picsum.photos/id/1040/80/80" alt="曲目封面" class="w-16 h-16 rounded-lg object-cover" />
+                                    <div class="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center opacity-0 hover:opacity-100 transition duration-300">
+                                        <i class="fa fa-play text-white text-xl"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <h3 class="text-lg font-bold text-gray-800 mb-1">《在那遥远的地方》</h3>
+                                            <p class="text-gray-500 text-sm mb-2">王洛宾 - 民歌经典</p>
+                                            <div class="flex items-center text-sm text-gray-500">
+                                                <span class="inline-block px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs mr-2">计划学习</span>
+                                                <span><i class="fa fa-clock-o mr-1"></i> 0分钟</span>
+                                            </div>
+                                        </div>
+                                        <span class="text-gray-400 text-sm">2天前</span>
+                                    </div>
+                                    <div class="mt-3">
+                                        <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                            <span>完成进度</span>
+                                            <span>0%</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-1.5">
+                                            <div class="bg-gray-300 h-1.5 rounded-full" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 我的收藏 -->
+                <section class="mb-8 section hidden" id="favorites-section">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">我的收藏</h2>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <div class="space-y-6" id="favorites-container">
+                            <!-- 收藏内容将通过JavaScript动态加载 -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 推荐内容 -->
+                <section>
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">为你推荐</h2>
+                        <a href="#" class="text-primary hover:underline">换一批</a>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover">
+                            <div class="relative">
+                                <img src="https://picsum.photos/id/1074/400/225" alt="推荐内容" class="w-full h-40 object-cover" />
+                                <div class="absolute top-2 left-2 bg-primary/90 text-white text-xs px-2 py-1 rounded">技巧教学</div>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="text-lg font-bold text-gray-800 mb-2 line-clamp-2">女中音声区转换技巧详解与训练方法</h3>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-gray-500">张教授</span>
+                                    <span class="text-gray-400">4.8 <i class="fa fa-star text-yellow-400"></i></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover">
+                            <div class="relative">
+                                <img src="https://picsum.photos/id/1076/400/225" alt="推荐内容" class="w-full h-40 object-cover" />
+                                <div class="absolute top-2 left-2 bg-green-500/90 text-white text-xs px-2 py-1 rounded">曲目分析</div>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="text-lg font-bold text-gray-800 mb-2 line-clamp-2">《我和我的祖国》演唱处理与情感表达指南</h3>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-gray-500">李老师</span>
+                                    <span class="text-gray-400">4.9 <i class="fa fa-star text-yellow-400"></i></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover">
+                            <div class="relative">
+                                <img src="https://picsum.photos/id/1080/400/225" alt="推荐内容" class="w-full h-40 object-cover" />
+                                <div class="absolute top-2 left-2 bg-orange-500/90 text-white text-xs px-2 py-1 rounded">备考攻略</div>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="text-lg font-bold text-gray-800 mb-2 line-clamp-2">2023年音乐院校招生要求变化及应对策略</h3>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-gray-500">王教授</span>
+                                    <span class="text-gray-400">4.7 <i class="fa fa-star text-yellow-400"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-primary text-white">
+        <div class="container mx-auto px-4 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">关于我们</h3>
+                    <p class="mb-4 text-gray-300">仔仔艺考声乐助手致力于为艺考生提供专业、全面的声乐学习资源和服务，帮助每一位艺考生实现自己的艺术梦想。</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-white hover:text-gray-300 transition duration-200"><i class="fa fa-weibo text-xl"></i></a>
+                        <a href="#" class="text-white hover:text-gray-300 transition duration-200"><i class="fa fa-wechat text-xl"></i></a>
+                        <a href="#" class="text-white hover:text-gray-300 transition duration-200"><i class="fa fa-qq text-xl"></i></a>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">快速链接</h3>
+                    <ul class="space-y-2">
+                        <li><a href="index.html" class="text-gray-300 hover:text-white transition duration-200">首页</a></li>
+                        <li><a href="song-library.html" class="text-gray-300 hover:text-white transition duration-200">曲目库</a></li>
+                        <li><a href="strategy.html" class="text-gray-300 hover:text-white transition duration-200">学习攻略</a></li>
+                        <li><a href="video.html" class="text-gray-300 hover:text-white transition duration-200">视频教学</a></li>
+                        <li><a href="user-center.html" class="text-gray-300 hover:text-white transition duration-200">个人中心</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">联系我们</h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-start">
+                            <i class="fa fa-envelope-o mt-1 mr-3"></i>
+                            <span class="text-gray-300">contact@zaizaiyikao.com</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fa fa-phone mr-3"></i>
+                            <span class="text-gray-300">400-123-4567</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa fa-map-marker mt-1 mr-3"></i>
+                            <span class="text-gray-300">北京市海淀区中关村南大街5号</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>© 2023 仔仔艺考声乐助手 版权所有 | ICP备案号:12345678号</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 引入Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- JavaScript -->
+    <script>
+        // 移动端菜单切换
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // 获取用户信息
+        async function fetchUserProfile() {
+            try {
+                // 使用与服务器相同的端口
+            const port = window.location.port || '3004';
+            const response = await fetch(`http://localhost:${port}/api/user/profile`);
+                if (!response.ok) throw new Error('获取用户信息失败');
+                const user = await response.json();
+                
+                // 更新用户信息显示
+                document.querySelector('.user-avatar').src = user.avatar;
+                document.querySelector('.user-name').textContent = user.name;
+                document.querySelector('.user-role').textContent = user.role;
+                document.querySelector('.user-location').textContent = user.location;
+                document.querySelector('.user-bio').textContent = user.bio;
+                
+                // 更新统计数据
+                document.querySelector('.favorites-count').textContent = user.favoritesCount;
+                document.querySelector('.strategies-count').textContent = user.strategiesCount;
+                document.querySelector('.learning-days').textContent = user.learningDays;
+            } catch (error) {
+                console.error('获取用户信息错误:', error);
+            }
+        }
+
+        // 获取学习统计
+        async function fetchLearningStats(timeRange = 'week') {
+            try {
+                // 使用与服务器相同的端口
+            const port = window.location.port || '3004';
+            const response = await fetch(`http://localhost:${port}/api/user/learning-stats?timeRange=${timeRange}`);
+                if (!response.ok) throw new Error('获取学习统计失败');
+                const stats = await response.json();
+                
+                // 更新统计卡片
+                document.querySelector('.stats-card:nth-child(1) .stat-value').textContent = stats.totalHours;
+                document.querySelector('.stats-card:nth-child(2) .stat-value').textContent = stats.totalSongs;
+                document.querySelector('.stats-card:nth-child(3) .stat-value').textContent = stats.totalPractices;
+                document.querySelector('.stats-card:nth-child(4) .stat-value').textContent = stats.averageCompletion + '%';
+                
+                // 绘制学习趋势图表
+                drawLearningTrend(stats.trendData);
+            } catch (error) {
+                console.error('获取学习统计错误:', error);
+            }
+        }
+
+        // 绘制学习趋势图表
+        function drawLearningTrend(trendData) {
+            const ctx = document.getElementById('learning-trend-chart').getContext('2d');
+            
+            // 提取数据
+            const dates = trendData.map(item => item.date);
+            const hours = trendData.map(item => item.hours);
+            const songs = trendData.map(item => item.songs);
+            const completion = trendData.map(item => item.completion);
+            
+            // 创建图表
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: '学习时长(小时)',
+                            data: hours,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: '完成率(%)',
+                            data: completion,
+                            borderColor: '#10b981',
+                            backgroundColor: 'transparent',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // 获取最近学习记录
+        async function fetchRecentLearning() {
+            try {
+                // 使用与服务器相同的端口
+            const port = window.location.port || '3004';
+            const response = await fetch(`http://localhost:${port}/api/user/recent-learning`);
+                if (!response.ok) throw new Error('获取学习记录失败');
+                const records = await response.json();
+                
+                // 清空现有的学习记录
+                const learningItems = document.querySelectorAll('.learning-item');
+                learningItems.forEach(item => {
+                    item.remove();
+                });
+                
+                // 获取学习记录容器
+                const learningContainer = document.querySelector('.bg-white.rounded-xl.shadow-md.p-6 .space-y-6');
+                
+                // 如果没有记录，显示空状态
+                if (records.length === 0) {
+                    const emptyState = document.createElement('div');
+                    emptyState.className = 'text-center py-12 text-gray-500';
+                    emptyState.innerHTML = `
+                        <i class="fa fa-music text-4xl mb-4"></i>
+                        <p>暂无学习记录</p>
+                    `;
+                    learningContainer.appendChild(emptyState);
+                    return;
+                }
+                
+                // 添加新的学习记录
+                records.forEach(record => {
+                    // 创建记录项
+                    const recordItem = document.createElement('div');
+                    recordItem.className = 'flex items-start gap-4 pb-6 border-b border-gray-100 learning-item';
+                    
+                    // 设置记录内容
+                    recordItem.innerHTML = `
+                        <div class="relative flex-shrink-0">
+                            <img src="${record.coverImage || 'https://picsum.photos/80/80'}" alt="${record.title}" class="w-16 h-16 rounded-lg object-cover" />
+                            <div class="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center opacity-0 hover:opacity-100 transition duration-300">
+                                <i class="fa fa-play text-white text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-800 mb-1">${record.title}</h3>
+                                    <p class="text-gray-500 text-sm mb-2">${record.artist} - ${record.description}</p>
+                                    <div class="flex items-center text-sm text-gray-500">
+                                        <span class="inline-block px-2 py-1 ${getStatusClass(record.status)} rounded text-xs mr-2">${getStatusText(record.status)}</span>
+                                        <span><i class="fa fa-clock-o mr-1"></i> ${record.duration}分钟</span>
+                                    </div>
+                                </div>
+                                <span class="text-gray-400 text-sm">${formatDate(record.date)}</span>
+                            </div>
+                            <div class="mt-3">
+                                <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                    <span>完成进度</span>
+                                    <span>${record.progress}%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-1.5">
+                                    <div class="${getProgressColorClass(record.progress)} h-1.5 rounded-full" style="width: ${record.progress}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // 添加到容器
+                    learningContainer.appendChild(recordItem);
+                });
+            } catch (error) {
+                console.error('获取学习记录错误:', error);
+            }
+        }
+        
+        // 辅助函数：获取状态文本
+        function getStatusText(status) {
+            const statusMap = {
+                'completed': '已学习',
+                'learning': '正在学习',
+                'planned': '计划学习'
+            };
+            return statusMap[status] || status;
+        }
+        
+        // 辅助函数：获取状态样式类
+        function getStatusClass(status) {
+            const statusMap = {
+                'completed': 'bg-blue-100 text-blue-700',
+                'learning': 'bg-green-100 text-green-700',
+                'planned': 'bg-yellow-100 text-yellow-700'
+            };
+            return statusMap[status] || 'bg-gray-100 text-gray-700';
+        }
+        
+        // 辅助函数：获取进度条颜色类
+        function getProgressColorClass(progress) {
+            if (progress === 100) return 'bg-primary';
+            if (progress > 50) return 'bg-primary';
+            if (progress > 0) return 'bg-secondary';
+            return 'bg-gray-300';
+        }
+        
+        // 辅助函数：格式化日期
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diffTime = Math.abs(now - date);
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 0) return '今天 ' + date.getHours() + ':' + (date.getMinutes() < 10 ? '0' : '') + date.getMinutes();
+            if (diffDays === 1) return '昨天 ' + date.getHours() + ':' + (date.getMinutes() < 10 ? '0' : '') + date.getMinutes();
+            if (diffDays < 7) return diffDays + '天前';
+            return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
+        }
+
+        // 检查用户登录状态
+        // 检查用户登录状态并返回结果
+        function checkLoginStatus() {
+            // 检查localStorage
+            const userLoggedIn = localStorage.getItem('userLoggedIn') === 'true';
+            const token = localStorage.getItem('token');
+            const userInfo = localStorage.getItem('userInfo');
+            
+            // 如果localStorage中没有，检查cookie
+            if (!userLoggedIn && !token) {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.startsWith('userLoggedIn=')) {
+                        const value = cookie.substring('userLoggedIn='.length, cookie.length);
+                        if (value === 'true') {
+                            localStorage.setItem('userLoggedIn', 'true');
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+            
+            return userLoggedIn || !!token || !!userInfo;
+        }
+
+        // 更新导航栏用户信息显示
+        function updateNavbarUserInfo() {
+            // 检查localStorage
+            const userLoggedIn = localStorage.getItem('userLoggedIn') === 'true';
+            const username = localStorage.getItem('username') || (localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).username : '');
+            const userAvatar = localStorage.getItem('userAvatar') || (localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).avatar : '');
+            
+            // 更新UI
+            const userActions = document.getElementById('user-actions');
+            const userProfile = document.getElementById('user-profile');
+            const userName = document.querySelector('.user-name');
+            const userAvatarImg = document.querySelector('.user-avatar');
+            
+            if (userLoggedIn && username) {
+                if (userActions) userActions.classList.add('hidden');
+                if (userProfile) userProfile.classList.remove('hidden');
+                if (userName) userName.textContent = username;
+                if (userAvatarImg && userAvatar) {
+                    userAvatarImg.src = userAvatar;
+                }
+            } else {
+                if (userActions) userActions.classList.remove('hidden');
+                if (userProfile) userProfile.classList.add('hidden');
+            }
+        }
+        
+        // 退出登录功能
+        function logout() {
+            // 清除localStorage
+            localStorage.removeItem('userLoggedIn');
+            localStorage.removeItem('username');
+            localStorage.removeItem('userAvatar');
+            localStorage.removeItem('token');
+            localStorage.removeItem('userInfo');
+            
+            // 清除cookie
+            document.cookie = 'userLoggedIn=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'userAvatar=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            
+            // 更新UI
+            updateNavbarUserInfo();
+            
+            // 显示退出成功提示
+            showNotification('已成功退出登录', 'success');
+            
+            // 跳转到登录页面
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 1500);
+        }
+        
+        // 设置退出登录功能
+        function setupLogout() {
+            const logoutBtn = document.getElementById('logout-btn');
+            const logoutLink = document.getElementById('logout-link');
+            const sidebarLogoutLink = document.getElementById('sidebar-logout-link');
+            
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    logout();
+                });
+            }
+            
+            if (logoutLink) {
+                logoutLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    logout();
+                });
+            }
+            
+            if (sidebarLogoutLink) {
+                sidebarLogoutLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    logout();
+                });
+            }
+        }
+        
+        // 用户菜单切换显示
+        function setupUserMenu() {
+            const userMenuBtn = document.getElementById('user-menu-btn');
+            const userDropdown = document.getElementById('user-dropdown');
+            
+            if (userMenuBtn && userDropdown) {
+                userMenuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    userDropdown.classList.toggle('hidden');
+                });
+                
+                // 点击页面其他地方关闭下拉菜单
+                document.addEventListener('click', function(e) {
+                    if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+                        userDropdown.classList.add('hidden');
+                    }
+                });
+            }
+        }
+        
+        // 登录按钮点击事件
+        function setupLoginButton() {
+            // 已直接在HTML中设置链接，这里保留空函数避免初始化错误
+        }
+        
+        // 注册按钮点击事件
+        function setupRegisterButton() {
+            // 已直接在HTML中设置链接，这里保留空函数避免初始化错误
+        }
+        
+        // 页面加载完成后执行
+        window.addEventListener('DOMContentLoaded', async () => {
+            // 更新导航栏用户信息
+            // 强制登录检查函数
+            function enforceLogin() {
+                const isLoggedIn = localStorage.getItem('userLoggedIn') === 'true' || 
+                                  document.cookie.includes('userLoggedIn=true');
+                
+                if (!isLoggedIn) {
+                    // 如果未登录，重定向到登录页面
+                    window.location.href = 'login.html';
+                    return false;
+                }
+                return true;
+            }
+            
+            // 全局退出登录函数
+            window.performLogout = function() {
+                // 清除localStorage
+                localStorage.removeItem('userLoggedIn');
+                localStorage.removeItem('username');
+                localStorage.removeItem('userAvatar');
+                localStorage.removeItem('userId');
+                
+                // 清除cookie
+                document.cookie = 'userLoggedIn=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                document.cookie = 'username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                document.cookie = 'userAvatar=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                
+                // 显示退出成功提示
+                alert('已成功退出登录');
+                
+                // 立即跳转到登录页面
+                window.location.href = 'login.html';
+            };
+            
+            // 检查登录状态
+            if (!enforceLogin()) return;
+            
+            // 登录状态确认后再设置各种功能
+            updateNavbarUserInfo();
+            setupLogout();
+            setupUserMenu();
+            setupLoginButton();
+            setupRegisterButton();
+            
+            // 移除对不存在函数的调用
+            // initSidebarNavigation();
+            // 保留其他初始化函数
+            if (typeof initTimeFilters === 'function') {
+                initTimeFilters();
+            }
+            
+            // 显示通知提示
+            function showNotification(message, type = 'info') {
+                const notification = document.getElementById('notification');
+                const notificationMessage = document.getElementById('notification-message');
+                const notificationIcon = document.getElementById('notification-icon');
+                
+                if (!notification || !notificationMessage || !notificationIcon) {
+                    // 如果通知元素不存在，创建一个临时的
+                    const tempNotification = document.createElement('div');
+                    tempNotification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                    tempNotification.textContent = message;
+                    document.body.appendChild(tempNotification);
+                    
+                    setTimeout(() => {
+                        tempNotification.style.opacity = '0';
+                        tempNotification.style.transition = 'opacity 0.5s';
+                        setTimeout(() => {
+                            document.body.removeChild(tempNotification);
+                        }, 500);
+                    }, 3000);
+                    return;
+                }
+                
+                // 设置消息内容
+                notificationMessage.textContent = message;
+                
+                // 设置图标和颜色
+                notificationIcon.className = 'fa mt-1 text-xl';
+                
+                switch(type) {
+                    case 'success':
+                        notificationIcon.classList.add('fa-check-circle', 'text-green-500');
+                        break;
+                    case 'error':
+                        notificationIcon.classList.add('fa-times-circle', 'text-red-500');
+                        break;
+                    case 'warning':
+                        notificationIcon.classList.add('fa-exclamation-circle', 'text-yellow-500');
+                        break;
+                    case 'info':
+                    default:
+                        notificationIcon.classList.add('fa-info-circle', 'text-primary');
+                        break;
+                }
+                
+                // 显示通知
+                notification.style.transform = 'translateX(0)';
+                
+                // 3秒后自动隐藏
+                setTimeout(() => {
+                    notification.style.transform = 'translateX(full)';
+                }, 3000);
+            }
+            
+            // 获取并显示数据
+            await fetchUserProfile();
+            await fetchLearningStats();
+            await fetchRecentLearning();
+            
+            // 检查当前是否选中了'我的收藏'
+            const activeItem = document.querySelector('.sidebar-item-active');
+            if (activeItem && activeItem.querySelector('span').textContent === '我的收藏') {
+                await fetchUserFavorites();
+            }
+        });
+    </script>
+</body>
+</html>

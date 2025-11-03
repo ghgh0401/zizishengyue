@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>退出登录</title>
+</head>
+<body>
+    <script>
+        // 设置端口
+        const port = window.location.port || '3004'; // 使用3004端口
+        
+        // 执行登出操作
+        function logout() {
+            // 清除localStorage中的用户信息
+            localStorage.removeItem('userLoggedIn');
+            localStorage.removeItem('username');
+            localStorage.removeItem('userAvatar');
+            localStorage.removeItem('userId');
+            
+            // 清除cookie中的用户信息
+            document.cookie = 'userLoggedIn=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'userAvatar=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            
+            // 显示退出成功提示
+            alert('已成功退出登录');
+            
+            // 跳转到登录页面，确保使用正确的端口
+            window.location.href = `http://localhost:${port}/login.html`;
+        }
+        
+        // 页面加载后立即执行登出
+        window.onload = logout;
+    </script>
+</body>
+</html>

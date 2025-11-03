@@ -1,0 +1,2725 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仔仔艺考声乐助手 - 后台管理</title>
+    <script>
+        // 确保页面在正确的协议和端口打开
+        if (window.location.protocol !== 'http:' || window.location.port !== '3004') {
+            console.log('检测到错误的协议或端口，正在重定向到正确的URL...');
+            const path = window.location.pathname.split('/').pop();
+            window.location.href = `http://localhost:3004/${path}`;
+        }
+    </script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- 配置Tailwind自定义颜色 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1a56db',  // 蓝色主题
+                        secondary: '#3b82f6',
+                        accent: '#60a5fa',
+                        dark: '#1e3a8a',
+                        light: '#bfdbfe',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <!-- 自定义样式 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .text-shadow-sm {
+                text-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            }
+            .card-hover {
+                transition: all 0.3s ease;
+            }
+            .card-hover:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            }
+            .btn-primary {
+                @apply bg-primary text-white font-medium px-6 py-3 rounded-lg transition duration-300 hover:bg-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary;
+            }
+            .btn-secondary {
+                @apply bg-white text-primary font-medium px-6 py-3 rounded-lg border border-primary transition duration-300 hover:bg-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary;
+            }
+            .btn-danger {
+                @apply bg-red-500 text-white font-medium px-6 py-3 rounded-lg transition duration-300 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500;
+            }
+            .btn-success {
+                @apply bg-green-500 text-white font-medium px-6 py-3 rounded-lg transition duration-300 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500;
+            }
+            .btn-warning {
+                @apply bg-yellow-500 text-white font-medium px-6 py-3 rounded-lg transition duration-300 hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500;
+            }
+            .nav-item {
+                @apply px-4 py-2 text-gray-300 hover:text-white transition duration-200;
+            }
+            .nav-item-active {
+                @apply px-4 py-2 text-white border-b-2 border-white font-medium;
+            }
+            .sidebar-item {
+                @apply flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-primary/10 hover:text-primary rounded-lg transition duration-200;
+            }
+            .sidebar-item-active {
+                @apply flex items-center space-x-3 px-4 py-3 bg-primary/10 text-primary font-medium rounded-lg;
+            }
+            .form-input {
+                @apply w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition duration-300;
+            }
+            .form-label {
+                @apply block text-sm font-medium text-gray-700 mb-1;
+            }
+            .module-content {
+                display: block;
+                transition: all 0.3s ease;
+            }
+            .module-content.hidden {
+                display: none;
+            }
+            #content-container {
+                min-height: auto;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- 导航栏 -->
+    <header class="bg-primary shadow-md">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-tachometer text-2xl text-white"></i>
+                <span class="text-xl font-bold text-white">后台管理系统</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="relative">
+                    <button class="text-white hover:text-gray-200 transition duration-200">
+                        <i class="fa fa-bell-o text-xl"></i>
+                        <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </button>
+                </div>
+                <a href="index.html" class="hidden md:block nav-item">返回前台</a>
+                <!-- 移动端菜单按钮 -->
+                <button class="md:hidden text-white text-xl" id="mobile-menu-button">
+                    <i class="fa fa-bars"></i>
+                </button>
+            </div>
+        </div>
+        <!-- 移动端菜单 -->
+        <div class="md:hidden hidden" id="mobile-menu">
+            <a href="index.html" class="block px-4 py-2 bg-primary text-gray-300 hover:text-white border-b border-gray-700">返回前台</a>
+            <a href="#" class="block px-4 py-2 bg-primary text-gray-300 hover:text-white">消息通知</a>
+        </div>
+    </header>
+
+    <!-- 主要内容 -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- 页面标题 -->
+        <section class="relative rounded-2xl overflow-hidden mb-8 bg-gradient-to-r from-primary to-dark">
+            <div class="absolute inset-0 opacity-20">
+                <img src="https://picsum.photos/id/1071/1200/200" alt="后台管理背景" class="w-full h-full object-cover" />
+            </div>
+            <div class="relative py-6 px-8 text-center text-white z-10">
+                <h1 class="text-2xl md:text-3xl font-bold text-shadow">曲目管理</h1>
+            </div>
+        </section>
+
+        <!-- 后台管理布局 -->
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- 左侧侧边栏 -->
+            <div class="lg:w-1/6">
+                <!-- 侧边栏导航 -->
+                <div class="bg-white rounded-xl shadow-md p-4">
+                    <h4 class="text-lg font-bold text-gray-800 mb-3 px-4">管理中心</h4>
+                    <div class="space-y-1">
+                        <a href="#" class="sidebar-item sidebar-item-active" data-module="songs">
+                            <i class="fa fa-music w-5 text-center"></i>
+                            <span>曲目管理</span>
+                        </a>
+                        <a href="#" class="sidebar-item" data-module="users">
+                            <i class="fa fa-users w-5 text-center"></i>
+                            <span>用户管理</span>
+                        </a>
+                        <a href="#" class="sidebar-item" data-module="strategies">
+                            <i class="fa fa-book w-5 text-center"></i>
+                            <span>攻略管理</span>
+                        </a>
+                        <a href="#" class="sidebar-item" data-module="analysis">
+                            <i class="fa fa-line-chart w-5 text-center"></i>
+                            <span>数据分析</span>
+                        </a>
+                        <a href="#" class="sidebar-item" data-module="settings">
+                            <i class="fa fa-cog w-5 text-center"></i>
+                            <span>系统设置</span>
+                        </a>
+                        <a href="#" class="sidebar-item text-red-500" id="logout-btn">
+                            <i class="fa fa-sign-out w-5 text-center"></i>
+                            <span>退出登录</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧主内容 -->
+            <div class="lg:w-5/6">
+                <!-- 功能模块容器 -->
+                <div id="content-container">
+                    <!-- 曲目管理模块 -->
+                    <div id="songs-module" class="module-content">
+                        <section class="bg-white rounded-xl shadow-md p-6 mb-8">
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                                <h2 class="text-xl font-bold text-gray-800 mb-4 md:mb-0">曲目管理</h2>
+                                <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+                                    <div class="relative w-full sm:w-auto">
+                                        <input 
+                                            type="text" 
+                                            id="admin-search-input" 
+                                            placeholder="搜索曲目或作曲家..." 
+                                            class="form-input pl-12 pr-4 w-full sm:w-64"
+                                        />
+                                        <i class="fa fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                    </div>
+                                    <button id="add-song-btn" class="btn-primary w-full sm:w-auto">
+                                        <i class="fa fa-plus mr-2"></i> 添加曲目
+                                    </button>
+                                </div>
+                            </div>
+
+                    <!-- 筛选条件 -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div>
+                            <label class="form-label">曲目类型</label>
+                            <select id="admin-type-filter" class="form-input">
+                                <option value="">全部类型</option>
+                                <option value="男声">男声</option>
+                                <option value="女声">女声</option>
+                                <option value="中文">中文</option>
+                                <option value="外文">外文</option>
+                                <option value="古诗词">古诗词</option>
+                                <option value="民歌">民歌</option>
+                                <option value="艺术歌曲">艺术歌曲</option>
+                                <option value="歌剧选段">歌剧选段</option>
+                                <option value="流行歌曲">流行歌曲</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">难度级别</label>
+                            <select id="admin-difficulty-filter" class="form-input">
+                                <option value="">全部难度</option>
+                                <option value="1">初级 (1星)</option>
+                                <option value="2">中级 (2星)</option>
+                                <option value="3">高级 (3星)</option>
+                                <option value="4">专业级 (4星)</option>
+                                <option value="5">大师级 (5星)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">排序方式</label>
+                            <select id="admin-sort-filter" class="form-input">
+                                <option value="newest">最新添加</option>
+                                <option value="title">按标题</option>
+                                <option value="views">按浏览量</option>
+                                <option value="difficulty">按难度</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 操作按钮 -->
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="flex items-center space-x-2">
+                            <button id="batch-delete-btn" class="btn-danger px-4 py-2 text-sm">
+                                <i class="fa fa-trash mr-1"></i> 批量删除
+                            </button>
+                            <button id="batch-active-btn" class="btn-success px-4 py-2 text-sm">
+                                <i class="fa fa-check mr-1"></i> 批量启用
+                            </button>
+                            <button id="batch-inactive-btn" class="btn-warning px-4 py-2 text-sm">
+                                <i class="fa fa-ban mr-1"></i> 批量禁用
+                            </button>
+                        </div>
+                        <div class="text-sm text-gray-500">
+                            共 <span id="total-count" class="text-primary font-bold">0</span> 条记录
+                        </div>
+                    </div>
+
+                    <!-- 曲目列表 -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full min-w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <input type="checkbox" id="select-all" class="rounded text-primary focus:ring-primary" />
+                                    </th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">封面</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">曲目信息</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">类型</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">难度</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">浏览量</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="admin-songs-table-body">
+                                <!-- 表格内容将通过JavaScript动态生成 -->
+                                <tr>
+                                    <td colspan="8" class="px-4 py-12 text-center text-gray-500">
+                                        <i class="fa fa-circle-o-notch fa-spin text-2xl mb-2 text-primary"></i>
+                                        <p>正在加载数据...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 分页 -->
+                    <div class="flex justify-between items-center mt-8" id="admin-pagination">
+                        <!-- 分页控件将通过JavaScript动态生成 -->
+                    </div>
+                    </div>
+                </section>
+            </div>
+            
+            <!-- 用户管理模块 -->
+            <div id="users-module" class="module-content hidden">
+                <section class="bg-white rounded-xl shadow-md p-6 mb-8">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4 md:mb-0">用户管理</h2>
+                        <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+                            <div class="relative w-full sm:w-auto">
+                                <input 
+                                    type="text" 
+                                    id="user-search-input" 
+                                    placeholder="搜索用户名..." 
+                                    class="form-input pl-12 pr-4 w-full sm:w-64"
+                                />
+                                <i class="fa fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                            <button id="add-user-btn" class="btn-primary w-full sm:w-auto">
+                                <i class="fa fa-plus mr-2"></i> 添加用户
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 用户状态筛选 -->
+                    <div class="grid grid-cols-1 gap-4 mb-6">
+                        <div>
+                            <label class="form-label">用户状态</label>
+                            <select id="user-status-filter" class="form-input">
+                                <option value="">全部状态</option>
+                                <option value="active">活跃</option>
+                                <option value="inactive">禁用</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- 操作按钮 -->
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="flex items-center space-x-2">
+                            <button id="batch-delete-users-btn" class="btn-danger px-4 py-2 text-sm">
+                                <i class="fa fa-trash mr-1"></i> 批量删除
+                            </button>
+                            <button id="batch-active-users-btn" class="btn-success px-4 py-2 text-sm">
+                                <i class="fa fa-check mr-1"></i> 批量启用
+                            </button>
+                            <button id="batch-inactive-users-btn" class="btn-warning px-4 py-2 text-sm">
+                                <i class="fa fa-ban mr-1"></i> 批量禁用
+                            </button>
+                        </div>
+                        <div class="text-sm text-gray-500">
+                            共 <span id="total-users-count" class="text-primary font-bold">0</span> 条记录
+                        </div>
+                    </div>
+                    
+                    <!-- 用户列表 -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full min-w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                                        <input type="checkbox" id="user-select-all" class="form-checkbox">
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">用户名</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">注册时间</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body" class="bg-white divide-y divide-gray-200">
+                                <!-- 用户列表内容将通过JavaScript动态生成 -->
+                                <tr class="text-center">
+                                    <td colspan="6" class="px-6 py-10 text-gray-500">加载用户数据中...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 用户分页 -->
+                    <div id="users-pagination" class="flex justify-between items-center mt-6">
+                        <!-- 分页控件将通过JavaScript动态生成 -->
+                    </div>
+                </section>
+            </div>
+            
+            <!-- 攻略管理模块 -->
+            <div id="strategies-module" class="module-content hidden">
+                <section class="bg-white rounded-xl shadow-md p-6 mb-8">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4 md:mb-0">攻略管理</h2>
+                        <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+                            <div class="relative w-full sm:w-auto">
+                                <input 
+                                    type="text" 
+                                    id="strategy-search-input" 
+                                    placeholder="搜索攻略标题..." 
+                                    class="form-input pl-12 pr-4 w-full sm:w-64"
+                                />
+                                <i class="fa fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                            <button id="add-strategy-btn" class="btn-primary w-full sm:w-auto">
+                                <i class="fa fa-plus mr-2"></i> 添加攻略
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 攻略类型筛选 -->
+                    <div class="grid grid-cols-1 gap-4 mb-6">
+                        <div>
+                            <label class="form-label">攻略类型</label>
+                            <select id="strategy-type-filter" class="form-input">
+                                <option value="">全部类型</option>
+                                <option value="exam">考试准备</option>
+                                <option value="skills">演唱技巧</option>
+                                <option value="selection">曲目选择</option>
+                                <option value="voice">声音训练</option>
+                                <option value="psychology">心理调整</option>
+                                <option value="school">院校选择</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- 攻略列表 -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full min-w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">标题</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">类型</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">创建时间</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="strategies-table-body" class="bg-white divide-y divide-gray-200">
+                                <!-- 攻略列表内容将通过JavaScript动态生成 -->
+                                <tr class="text-center">
+                                    <td colspan="5" class="px-6 py-10 text-gray-500">加载攻略数据中...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+            
+            <!-- 数据分析模块 -->
+            <div id="analysis-module" class="module-content hidden">
+                <section class="bg-white rounded-xl shadow-md p-6 mb-8">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4 md:mb-0">数据分析</h2>
+                        <div class="flex items-center space-x-2">
+                            <button id="refresh-analysis-btn" class="btn-secondary w-full sm:w-auto">
+                                <i class="fa fa-refresh mr-2"></i> 刷新数据
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 数据概览 -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-blue-50 rounded-xl p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-medium text-blue-700">曲目总数</h3>
+                                <i class="fa fa-music text-2xl text-blue-500"></i>
+                            </div>
+                            <p id="total-songs-count" class="text-3xl font-bold text-blue-800">0</p>
+                            <p class="text-sm text-blue-600 mt-2">较上月增长 <span class="font-medium">0%</span></p>
+                        </div>
+                        
+                        <div class="bg-green-50 rounded-xl p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-medium text-green-700">用户总数</h3>
+                                <i class="fa fa-users text-2xl text-green-500"></i>
+                            </div>
+                            <p id="total-user-count" class="text-3xl font-bold text-green-800">0</p>
+                            <p class="text-sm text-green-600 mt-2">较上月增长 <span class="font-medium">0%</span></p>
+                        </div>
+                        
+                        <div class="bg-purple-50 rounded-xl p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-medium text-purple-700">总浏览量</h3>
+                                <i class="fa fa-eye text-2xl text-purple-500"></i>
+                            </div>
+                            <p id="total-views-count" class="text-3xl font-bold text-purple-800">0</p>
+                            <p class="text-sm text-purple-600 mt-2">今日新增 <span class="font-medium">0</span> 次</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 图表区域 -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white rounded-xl shadow p-6">
+                            <h3 class="text-lg font-medium text-gray-800 mb-4">曲目类型分布</h3>
+                            <div id="song-types-chart" class="w-full h-64"></div>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl shadow p-6">
+                            <h3 class="text-lg font-medium text-gray-800 mb-4">月度浏览趋势</h3>
+                            <div id="monthly-views-chart" class="w-full h-64"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 热门曲目 -->
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h3 class="text-lg font-medium text-gray-800 mb-4">热门曲目 TOP 10</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full min-w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">排名</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">曲目名称</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">作曲家</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">类型</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">浏览量</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="popular-songs-table" class="bg-white divide-y divide-gray-200">
+                                    <!-- 热门曲目列表将通过JavaScript动态生成 -->
+                                    <tr class="text-center">
+                                        <td colspan="5" class="px-6 py-10 text-gray-500">加载热门曲目数据中...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            
+            <!-- 系统设置模块 -->
+            <div id="settings-module" class="module-content hidden">
+                <section class="bg-white rounded-xl shadow-md p-6 mb-8">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4 md:mb-0">系统设置</h2>
+                        <div class="flex items-center space-x-2">
+                            <button id="save-settings-btn" class="btn-primary w-full sm:w-auto">
+                                <i class="fa fa-save mr-2"></i> 保存设置
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 设置表单 -->
+                    <form id="settings-form">
+                        <!-- 网站信息设置 -->
+                        <div class="mb-8">
+                            <h3 class="text-lg font-medium text-gray-800 mb-4 pb-2 border-b">网站信息设置</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="form-label">网站标题</label>
+                                    <input type="text" id="site-title" value="仔仔艺考声乐助手" class="form-input">
+                                </div>
+                                <div>
+                                    <label class="form-label">网站描述</label>
+                                    <input type="text" id="site-description" value="专业的声乐艺考曲目库与学习平台" class="form-input">
+                                </div>
+                                <div>
+                                    <label class="form-label">联系邮箱</label>
+                                    <input type="email" id="contact-email" value="contact@example.com" class="form-input">
+                                </div>
+                                <div>
+                                    <label class="form-label">备案号</label>
+                                    <input type="text" id="icp-number" value="粤ICP备12345678号" class="form-input">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 管理员设置 -->
+                        <div class="mb-8">
+                            <h3 class="text-lg font-medium text-gray-800 mb-4 pb-2 border-b">管理员设置</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="form-label">当前密码</label>
+                                    <input type="password" id="current-password" class="form-input">
+                                </div>
+                                <div>
+                                    <label class="form-label">新密码</label>
+                                    <input type="password" id="new-password" class="form-input">
+                                </div>
+                                <div>
+                                    <label class="form-label">确认新密码</label>
+                                    <input type="password" id="confirm-password" class="form-input">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 系统状态 -->
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-800 mb-4 pb-2 border-b">系统状态</h3>
+                            <div class="grid grid-cols-1 gap-4">
+                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-md">
+                                    <div>
+                                        <h4 class="text-gray-800 font-medium">服务器运行状态</h4>
+                                        <p class="text-sm text-gray-500 mt-1">上次更新: 刚刚</p>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                                        <span class="text-green-600 font-medium">运行正常</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-md">
+                                    <div>
+                                        <h4 class="text-gray-800 font-medium">数据库状态</h4>
+                                        <p class="text-sm text-gray-500 mt-1">MySQL 8.0.28</p>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                                        <span class="text-green-600 font-medium">连接正常</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </section>
+            </div>
+        </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 添加/编辑曲目模态框 -->
+    <div id="song-modal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white">
+                <h3 class="text-xl font-bold text-gray-800" id="modal-title">添加曲目</h3>
+                <button id="close-modal-btn" class="text-gray-400 hover:text-gray-500 transition-colors">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            <form id="song-form" class="p-6">
+                <input type="hidden" id="song-id" value="" />
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label class="form-label">曲目名称 <span class="text-red-500">*</span></label>
+                        <input type="text" id="song-title" name="title" class="form-input" required placeholder="请输入曲目名称" />
+                    </div>
+                    <div>
+                        <label class="form-label">作曲家</label>
+                        <input type="text" id="song-composer" name="composer" class="form-input" placeholder="请输入作曲家" />
+                    </div>
+                    <div>
+                        <label class="form-label">曲目类型1 (主要类型) <span class="text-red-500">*</span></label>
+                        <select id="song-type" name="type" class="form-input" required>
+                            <option value="">请选择类型</option>
+                            
+                            <!-- 声部分类 -->
+                            <optgroup label="声部">
+                                <option value="男声">男声</option>
+                                <option value="女声">女声</option>
+                            </optgroup>
+                            
+                            <!-- 语言分类 -->
+                            <optgroup label="语言">
+                                <option value="中文">中文</option>
+                                <option value="外文">外文</option>
+                                <option value="其他">其他</option>
+                            </optgroup>
+                            
+                            <!-- 体裁分类 -->
+                            <optgroup label="体裁">
+                                <option value="古诗词">古诗词</option>
+                                <option value="民歌">民歌</option>
+                                <option value="艺术歌曲">艺术歌曲</option>
+                                <option value="歌剧选段">歌剧选段</option>
+                                <option value="流行歌曲">流行歌曲</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">曲目类型2 (可选)</label>
+                        <select id="song-type2" name="type2" class="form-input">
+                            <option value="">不选择</option>
+                            
+                            <!-- 声部分类 -->
+                            <optgroup label="声部">
+                                <option value="男声">男声</option>
+                                <option value="女声">女声</option>
+                            </optgroup>
+                            
+                            <!-- 语言分类 -->
+                            <optgroup label="语言">
+                                <option value="中文">中文</option>
+                                <option value="外文">外文</option>
+                                <option value="其他">其他</option>
+                            </optgroup>
+                            
+                            <!-- 体裁分类 -->
+                            <optgroup label="体裁">
+                                <option value="古诗词">古诗词</option>
+                                <option value="民歌">民歌</option>
+                                <option value="艺术歌曲">艺术歌曲</option>
+                                <option value="歌剧选段">歌剧选段</option>
+                                <option value="流行歌曲">流行歌曲</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">曲目类型3 (可选)</label>
+                        <select id="song-type3" name="type3" class="form-input">
+                            <option value="">不选择</option>
+                            
+                            <!-- 声部分类 -->
+                            <optgroup label="声部">
+                                <option value="男声">男声</option>
+                                <option value="女声">女声</option>
+                            </optgroup>
+                            
+                            <!-- 语言分类 -->
+                            <optgroup label="语言">
+                                <option value="中文">中文</option>
+                                <option value="外文">外文</option>
+                                <option value="其他">其他</option>
+                            </optgroup>
+                            
+                            <!-- 体裁分类 -->
+                            <optgroup label="体裁">
+                                <option value="古诗词">古诗词</option>
+                                <option value="民歌">民歌</option>
+                                <option value="艺术歌曲">艺术歌曲</option>
+                                <option value="歌剧选段">歌剧选段</option>
+                                <option value="流行歌曲">流行歌曲</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">难度级别 <span class="text-red-500">*</span></label>
+                        <select id="song-difficulty" name="difficulty" class="form-input" required>
+                            <option value="">请选择难度</option>
+                            <option value="1">初级 (1星)</option>
+                            <option value="2">中级 (2星)</option>
+                            <option value="3">高级 (3星)</option>
+                            <option value="4">专业级 (4星)</option>
+                            <option value="5">大师级 (5星)</option>
+                        </select>
+                    </div>
+                    <!-- HTML文件上传控件 -->
+                    <div class="md:col-span-2">
+                        <label class="form-label">曲目详情HTML文件</label>
+                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
+                            <div class="space-y-1 text-center">
+                                <i class="fa fa-file-code-o text-3xl text-gray-400"></i>
+                                <div class="flex text-sm text-gray-600">
+                                    <label for="song-html" class="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-primary/90">
+                                        <span>上传HTML文件</span>
+                                        <input id="song-html" name="htmlFile" type="file" accept=".html,.htm" class="sr-only" />
+                                    </label>
+                                    <p class="pl-1">或拖放文件</p>
+                                </div>
+                                <p class="text-xs text-gray-500">
+                                    HTML, HTM 最大 5MB
+                                </p>
+                                <div id="html-file-info" class="mt-4 hidden">
+                                    <span id="selected-html-file" class="text-sm text-gray-700"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 封面上传控件 -->
+                    <div class="md:col-span-2">
+                        <label class="form-label">曲目封面 URL</label>
+                        <div class="mt-1">
+                            <input type="text" id="song-image-url" class="form-input" placeholder="请输入封面图片的URL地址" />
+                            <p class="text-xs text-gray-500 mt-1">
+                                支持 HTTP/HTTPS 协议的图片 URL，建议尺寸 300x300 像素
+                            </p>
+                            <div id="image-preview" class="mt-4 hidden">
+                                <img id="preview-img" src="" alt="预览图" class="max-h-40 mx-auto" />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 乐谱上传控件 -->
+                    <div class="md:col-span-2">
+                        <label class="form-label">乐谱文件</label>
+                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
+                            <div class="space-y-1 text-center">
+                                <i class="fa fa-file-text text-3xl text-gray-400"></i>
+                                <div class="flex text-sm text-gray-600">
+                                    <label for="song-sheet-music" class="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-primary/90">
+                                        <span>上传乐谱</span>
+                                        <input id="song-sheet-music" name="sheetMusic" type="file" accept=".pdf,.jpg,.jpeg,.png" class="sr-only" />
+                                    </label>
+                                    <p class="pl-1">或拖放文件</p>
+                                </div>
+                                <p class="text-xs text-gray-500">
+                                    PDF, JPG, PNG 最大 5MB
+                                </p>
+                                <div id="sheet-music-info" class="mt-4 hidden">
+                                    <span id="selected-sheet-music" class="text-sm text-gray-700"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 乐谱预览图上传控件 -->
+                    <div class="md:col-span-2">
+                        <label class="form-label">乐谱预览图</label>
+                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
+                            <div class="space-y-1 text-center">
+                                <i class="fa fa-picture-o text-3xl text-gray-400"></i>
+                                <div class="flex text-sm text-gray-600">
+                                    <label for="song-sheet-music-preview" class="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-primary/90">
+                                        <span>上传预览图</span>
+                                        <input id="song-sheet-music-preview" name="sheetMusicPreview" type="file" accept=".jpg,.jpeg,.png" class="sr-only" />
+                                    </label>
+                                    <p class="pl-1">或拖放图片</p>
+                                </div>
+                                <p class="text-xs text-gray-500">
+                                    JPG, PNG 最大 1MB
+                                </p>
+                                <div id="sheet-music-preview-container" class="mt-4 hidden">
+                                    <img id="sheet-music-preview-img" src="" alt="乐谱预览图" class="max-h-40 mx-auto" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 标签控件 -->
+                    <div class="md:col-span-2">
+                        <label class="form-label">曲目标签 (最多3个)</label>
+                        <div class="flex flex-wrap gap-2 mb-2" id="tag-container">
+                            <!-- 标签将动态添加到这里 -->
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="tag-input" class="form-input flex-grow" placeholder="输入标签后按Enter添加" />
+                            <button type="button" id="add-tag-btn" class="btn-primary">添加标签</button>
+                        </div>
+                        <input type="hidden" id="song-tags" name="tags" value="[]" />
+                    </div>
+                    <!-- 描述控件 -->
+                    <div class="md:col-span-2">
+                        <label class="form-label">曲目描述</label>
+                        <textarea id="song-description" name="description" rows="4" class="form-input" placeholder="请输入曲目描述"></textarea>
+                    </div>
+                    <!-- 状态控件 -->
+                    <div class="md:col-span-2">
+                        <label class="form-label">曲目状态</label>
+                        <div class="flex items-center space-x-4 mt-2">
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="status" value="1" class="text-primary focus:ring-primary" checked />
+                                <span class="ml-2">启用</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="status" value="0" class="text-primary focus:ring-primary" />
+                                <span class="ml-2">禁用</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-4 pt-4 border-t border-gray-200">
+                    <button type="button" id="cancel-modal-btn" class="btn-secondary px-6 py-2">取消</button>
+                    <button type="submit" class="btn-primary px-6 py-2">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 确认删除模态框 -->
+    <div id="delete-modal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div class="p-6">
+                <div class="text-center mb-6">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 text-red-500 mb-4">
+                        <i class="fa fa-exclamation-triangle text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">确认删除</h3>
+                    <p class="text-gray-600" id="delete-message">确定要删除选中的曲目吗？此操作无法撤销。</p>
+                </div>
+                <div class="flex justify-center space-x-4">
+                    <button id="cancel-delete-btn" class="btn-secondary px-6 py-2">取消</button>
+                    <button id="confirm-delete-btn" class="btn-danger px-6 py-2">确认删除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 攻略管理模态框 -->
+    <div id="strategy-modal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-3xl">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold text-gray-800" id="strategy-modal-title">添加攻略</h3>
+                    <button type="button" id="close-strategy-modal-btn" class="text-gray-400 hover:text-gray-500">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+                <form id="strategy-form">
+                    <input type="hidden" id="strategy-id" name="id" value="">
+                    <div class="grid grid-cols-1 gap-4">
+                        <div>
+                            <label class="form-label">攻略标题 <span class="text-red-500">*</span></label>
+                            <input type="text" id="strategy-title" name="title" class="form-input" required placeholder="请输入攻略标题">
+                        </div>
+                        <div>
+                            <label class="form-label">攻略类型 <span class="text-red-500">*</span></label>
+                            <select id="strategy-type" name="type" class="form-input" required>
+                                <option value="">请选择攻略类型</option>
+                                <option value="exam">考试准备</option>
+                                <option value="skills">演唱技巧</option>
+                                <option value="selection">曲目选择</option>
+                                <option value="voice">声音训练</option>
+                                <option value="psychology">心理调整</option>
+                                <option value="school">院校选择</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">攻略内容 <span class="text-red-500">*</span></label>
+                            <textarea id="strategy-content" name="content" rows="10" class="form-input" required placeholder="请输入攻略内容"></textarea>
+                        </div>
+                        <div>
+                            <label class="form-label">创建时间</label>
+                            <input type="date" id="strategy-create-time" name="createTime" class="form-input">
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-4 pt-4 border-t border-gray-200">
+                        <button type="button" id="cancel-strategy-modal-btn" class="btn-secondary px-6 py-2">取消</button>
+                        <button type="submit" class="btn-primary px-6 py-2">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知消息 -->
+    <div id="notification" class="fixed top-4 right-4 z-50 bg-white rounded-lg shadow-lg p-4 max-w-xs transform translate-x-full transition-transform duration-300 hidden">
+        <div class="flex items-start">
+            <div id="notification-icon" class="flex-shrink-0 mt-1">
+                <i class="fa fa-check-circle text-green-500 text-xl"></i>
+            </div>
+            <div class="ml-3">
+                <h4 id="notification-title" class="text-sm font-medium text-gray-800">操作成功</h4>
+                <p id="notification-message" class="mt-1 text-xs text-gray-500">您的操作已成功完成。</p>
+            </div>
+            <button id="close-notification" class="ml-auto flex-shrink-0 text-gray-400 hover:text-gray-500">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // 全局变量
+        let currentSongId = null;
+        let selectedSongIds = [];
+        let imageUrl = '';
+        let selectedHtmlFile = null;
+        let selectedSheetMusicFile = null;
+        let selectedSheetMusicPreviewFile = null;
+
+        // 标签管理功能
+        function initTagManagement() {
+            const tagInput = document.getElementById('tag-input');
+            const addTagBtn = document.getElementById('add-tag-btn');
+            const tagContainer = document.getElementById('tag-container');
+            const tagsInput = document.getElementById('song-tags');
+            
+            // 添加标签函数
+            function addTag(tagText) {
+                if (!tagText.trim()) return;
+                
+                const currentTags = JSON.parse(tagsInput.value || '[]');
+                if (currentTags.length >= 3) {
+                    showNotification('warning', '操作提示', '最多只能添加3个标签');
+                    return;
+                }
+                
+                if (currentTags.includes(tagText.trim())) {
+                    showNotification('warning', '操作提示', '标签已存在');
+                    return;
+                }
+                
+                currentTags.push(tagText.trim());
+                tagsInput.value = JSON.stringify(currentTags);
+                
+                // 创建标签元素
+                const tagElement = document.createElement('div');
+                tagElement.className = 'inline-flex items-center bg-primary/10 text-primary px-3 py-1 rounded-full text-sm';
+                tagElement.innerHTML = `
+                    <span>${tagText.trim()}</span>
+                    <button type="button" class="ml-2 text-primary hover:text-primary/80 transition-colors delete-tag">
+                        <i class="fa fa-times"></i>
+                    </button>
+                `;
+                
+                // 添加删除事件
+                tagElement.querySelector('.delete-tag').addEventListener('click', function() {
+                    const tagToRemove = this.parentElement.querySelector('span').textContent;
+                    const updatedTags = currentTags.filter(tag => tag !== tagToRemove);
+                    tagsInput.value = JSON.stringify(updatedTags);
+                    tagElement.remove();
+                });
+                
+                tagContainer.appendChild(tagElement);
+                tagInput.value = '';
+            }
+            
+            // 添加按钮点击事件
+            addTagBtn.addEventListener('click', function() {
+                addTag(tagInput.value);
+            });
+            
+            // 输入框回车事件
+            tagInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addTag(this.value);
+                }
+            });
+            
+            // 清空标签函数
+            window.clearTags = function() {
+                const tagContainer = document.getElementById('tag-container');
+                const tagsInput = document.getElementById('song-tags');
+                
+                if (tagContainer && tagsInput) {
+                    tagContainer.innerHTML = '';
+                    tagsInput.value = '[]';
+                }
+            };
+            
+            // 加载标签函数
+            window.loadTags = function(tagsArray) {
+                clearTags();
+                if (Array.isArray(tagsArray)) {
+                    tagsArray.forEach(tag => addTag(tag));
+                }
+            };
+        }
+        
+        // HTML文件选择处理
+        document.getElementById('song-html').addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                selectedHtmlFile = e.target.files[0];
+                const htmlFileInfo = document.getElementById('html-file-info');
+                const selectedHtmlFileSpan = document.getElementById('selected-html-file');
+                
+                // 显示选中的文件名
+                selectedHtmlFileSpan.textContent = selectedHtmlFile.name;
+                htmlFileInfo.classList.remove('hidden');
+            }
+        });
+        
+        // 乐谱文件选择处理
+        document.getElementById('song-sheet-music').addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                selectedSheetMusicFile = e.target.files[0];
+                const sheetMusicInfo = document.getElementById('sheet-music-info');
+                const selectedSheetMusicSpan = document.getElementById('selected-sheet-music');
+                
+                // 显示选中的文件名
+                selectedSheetMusicSpan.textContent = selectedSheetMusicFile.name;
+                sheetMusicInfo.classList.remove('hidden');
+            }
+        });
+        
+        // 移动端菜单切换
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // 显示通知消息
+        function showNotification(type, title, message) {
+            const notification = document.getElementById('notification');
+            const notificationIcon = document.getElementById('notification-icon');
+            const notificationTitle = document.getElementById('notification-title');
+            const notificationMessage = document.getElementById('notification-message');
+            
+            // 设置通知类型和内容
+            notificationIcon.innerHTML = '';
+            if (type === 'success') {
+                notificationIcon.innerHTML = '<i class="fa fa-check-circle text-green-500 text-xl"></i>';
+                notification.classList.add('bg-green-50');
+            } else if (type === 'error') {
+                notificationIcon.innerHTML = '<i class="fa fa-exclamation-circle text-red-500 text-xl"></i>';
+                notification.classList.add('bg-red-50');
+            } else if (type === 'warning') {
+                notificationIcon.innerHTML = '<i class="fa fa-exclamation-triangle text-yellow-500 text-xl"></i>';
+                notification.classList.add('bg-yellow-50');
+            }
+            
+            notificationTitle.textContent = title;
+            notificationMessage.textContent = message;
+            
+            // 显示通知
+            notification.classList.remove('hidden');
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 10);
+            
+            // 自动关闭
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    notification.classList.add('hidden');
+                    notification.classList.remove('bg-green-50', 'bg-red-50', 'bg-yellow-50');
+                }, 300);
+            }, 3000);
+        }
+
+        // 关闭通知
+        document.getElementById('close-notification').addEventListener('click', function() {
+            const notification = document.getElementById('notification');
+            notification.classList.add('translate-x-full');
+            setTimeout(() => {
+                notification.classList.add('hidden');
+                notification.classList.remove('bg-green-50', 'bg-red-50', 'bg-yellow-50');
+            }, 300);
+        });
+
+        // 模态框控制
+        function openModal() {
+            const modal = document.getElementById('song-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('song-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = 'auto';
+            
+            // 重置表单
+            document.getElementById('song-form').reset();
+            document.getElementById('song-id').value = '';
+            document.getElementById('image-preview').classList.add('hidden');
+            document.getElementById('preview-img').src = '';
+            document.getElementById('song-image-url').value = '';
+            document.getElementById('html-file-info').classList.add('hidden');
+            document.getElementById('selected-html-file').textContent = '';
+            document.getElementById('sheet-music-info').classList.add('hidden');
+            document.getElementById('selected-sheet-music').textContent = '';
+            // 重置乐谱预览图
+            const sheetMusicPreviewContainer = document.getElementById('sheet-music-preview-container');
+            if (sheetMusicPreviewContainer) {
+                sheetMusicPreviewContainer.classList.add('hidden');
+            }
+            const sheetMusicPreviewImg = document.getElementById('sheet-music-preview-img');
+            if (sheetMusicPreviewImg) {
+                sheetMusicPreviewImg.src = '';
+            }
+            imageUrl = '';
+            selectedHtmlFile = null;
+            selectedSheetMusicFile = null;
+            selectedSheetMusicPreviewFile = null;
+            currentSongId = null;
+            
+            // 清空标签
+            if (window.clearTags) {
+                clearTags();
+            }
+        }
+
+        function openDeleteModal(message) {
+            const modal = document.getElementById('delete-modal');
+            document.getElementById('delete-message').textContent = message || '确定要删除选中的曲目吗？此操作无法撤销。';
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDeleteModal() {
+            const modal = document.getElementById('delete-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = 'auto';
+        }
+
+        // 添加曲目按钮
+        document.getElementById('add-song-btn').addEventListener('click', function() {
+            document.getElementById('modal-title').textContent = '添加曲目';
+            openModal();
+        });
+
+        // 关闭模态框按钮
+        document.getElementById('close-modal-btn').addEventListener('click', closeModal);
+        document.getElementById('cancel-modal-btn').addEventListener('click', closeModal);
+
+        // 关闭删除模态框按钮
+        document.getElementById('cancel-delete-btn').addEventListener('click', closeDeleteModal);
+
+        // 图片预览 - 从URL
+        document.getElementById('song-image-url').addEventListener('input', function(e) {
+            const url = this.value.trim();
+            if (url) {
+                const previewImg = document.getElementById('preview-img');
+                const imagePreview = document.getElementById('image-preview');
+                
+                // 验证URL格式（简单验证）
+                if (/^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
+                    previewImg.src = url;
+                    imageUrl = url;
+                    imagePreview.classList.remove('hidden');
+                } else {
+                    // 显示错误提示
+                    showNotification('warning', '格式错误', '请输入有效的图片URL');
+                }
+            } else {
+                document.getElementById('image-preview').classList.add('hidden');
+                document.getElementById('preview-img').src = '';
+                imageUrl = '';
+            }
+        });
+        
+        // 乐谱预览图预览
+        document.getElementById('song-sheet-music-preview').addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const previewContainer = document.getElementById('sheet-music-preview');
+                    const previewImg = document.getElementById('sheet-music-preview-img');
+                    
+                    previewImg.src = event.target.result;
+                    previewContainer.classList.remove('hidden');
+                    // 存储选中的文件以供上传
+                    selectedSheetMusicPreviewFile = e.target.files[0];
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        // 全选/取消全选
+        document.getElementById('select-all').addEventListener('change', function() {
+            const isChecked = this.checked;
+            const checkboxes = document.querySelectorAll('input[name="song-checkbox"]');
+            
+            selectedSongIds = [];
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+                if (isChecked) {
+                    selectedSongIds.push(checkbox.value);
+                }
+            });
+        });
+
+        // 单个复选框点击
+        function handleCheckboxClick(checkbox) {
+            if (checkbox.checked) {
+                selectedSongIds.push(checkbox.value);
+            } else {
+                selectedSongIds = selectedSongIds.filter(id => id !== checkbox.value);
+            }
+            
+            // 更新全选复选框状态
+            const allCheckboxes = document.querySelectorAll('input[name="song-checkbox"]');
+            const allChecked = Array.from(allCheckboxes).every(cb => cb.checked);
+            document.getElementById('select-all').checked = allChecked;
+        }
+
+        // 批量删除
+        document.getElementById('batch-delete-btn').addEventListener('click', function() {
+            if (selectedSongIds.length === 0) {
+                showNotification('warning', '操作提示', '请先选择要删除的曲目');
+                return;
+            }
+            openDeleteModal(`确定要删除选中的 ${selectedSongIds.length} 个曲目吗？此操作无法撤销。`);
+        });
+
+        // 确认删除
+        document.getElementById('confirm-delete-btn').addEventListener('click', async function() {
+            try {
+                // 显示加载状态
+                this.disabled = true;
+                this.innerHTML = '<i class="fa fa-circle-o-notch fa-spin mr-2"></i> 删除中...';
+                
+                // 获取认证token
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('未登录，请重新登录');
+                }
+                
+                // 发送实际的删除API请求
+                // 使用绝对路径以避免net::ERR_NAME_NOT_RESOLVED错误
+                // 使用与服务器相同的端口
+        const port = window.location.port || '3004';
+        const baseUrl = `http://localhost:${port}`;
+                
+                // 对每个选中的曲目ID发送删除请求
+                for (const songId of selectedSongIds) {
+                    const deleteResponse = await fetch(`${baseUrl}/api/admin/songs/${songId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (!deleteResponse.ok) {
+                        throw new Error(`删除曲目ID ${songId} 失败: ${deleteResponse.status}`);
+                    }
+                    
+                    // 检查响应数据
+                    const deleteResult = await deleteResponse.json();
+                    if (!deleteResult.success) {
+                        throw new Error(`删除曲目ID ${songId} 失败: ${deleteResult.message || '未知错误'}`);
+                    }
+                }
+                
+                // 关闭删除模态框
+                closeDeleteModal();
+                
+                // 显示成功通知
+                showNotification('success', '删除成功', `成功删除 ${selectedSongIds.length} 个曲目`);
+                
+                // 清空选中数组
+                selectedSongIds = [];
+                document.getElementById('select-all').checked = false;
+                
+                // 重新加载曲目列表
+                loadAdminSongs();
+            } catch (error) {
+                console.error('删除失败:', error);
+                showNotification('error', '删除失败', error.message || '请稍后再试');
+            } finally {
+                this.disabled = false;
+                this.innerHTML = '确认删除';
+            }
+        });
+
+        // 批量启用/禁用
+        document.getElementById('batch-active-btn').addEventListener('click', async function() {
+            if (selectedSongIds.length === 0) {
+                showNotification('warning', '操作提示', '请先选择要启用的曲目');
+                return;
+            }
+            
+            try {
+                // 模拟API调用
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // 显示成功通知
+                showNotification('success', '操作成功', `成功启用 ${selectedSongIds.length} 个曲目`);
+                
+                // 重新加载曲目列表
+                loadAdminSongs();
+            } catch (error) {
+                console.error('操作失败:', error);
+                showNotification('error', '操作失败', '请稍后再试');
+            }
+        });
+
+        document.getElementById('batch-inactive-btn').addEventListener('click', async function() {
+            if (selectedSongIds.length === 0) {
+                showNotification('warning', '操作提示', '请先选择要禁用的曲目');
+                return;
+            }
+            
+            try {
+                // 模拟API调用
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // 显示成功通知
+                showNotification('success', '操作成功', `成功禁用 ${selectedSongIds.length} 个曲目`);
+                
+                // 重新加载曲目列表
+                loadAdminSongs();
+            } catch (error) {
+                console.error('操作失败:', error);
+                showNotification('error', '操作失败', '请稍后再试');
+            }
+        });
+
+        // 表单提交 - 支持文件上传
+        document.getElementById('song-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            try {
+                // 获取表单数据
+                const title = document.getElementById('song-title').value;
+                const composer = document.getElementById('song-composer').value;
+                const type = document.getElementById('song-type').value;
+                
+                // 验证必填字段
+                if (!title || !composer || !type) {
+                    showNotification('warning', '验证失败', '标题、作曲者和类型为必填项');
+                    return;
+                }
+                
+                // 安全处理tags字段
+                let tags = [];
+                try {
+                    const tagsInput = document.getElementById('song-tags')?.value;
+                    tags = tagsInput ? JSON.parse(tagsInput) : [];
+                    // 确保tags是数组
+                    if (!Array.isArray(tags)) {
+                        tags = [];
+                    }
+                } catch (parseError) {
+                    console.error('Tags JSON解析错误:', parseError);
+                    showNotification('error', '数据格式错误', '标签格式不正确，请检查后重试');
+                    return;
+                }
+                
+                // 创建FormData对象以支持文件上传
+                const formData = new FormData();
+                formData.append('id', document.getElementById('song-id').value);
+                formData.append('title', title);
+                formData.append('composer', composer);
+                formData.append('type', type);
+                formData.append('type2', document.getElementById('song-type2')?.value || '');
+                formData.append('type3', document.getElementById('song-type3')?.value || '');
+                formData.append('tags', JSON.stringify(tags));
+                formData.append('difficulty', document.getElementById('song-difficulty').value);
+                formData.append('description', document.getElementById('song-description').value);
+                formData.append('status', document.querySelector('input[name="status"]:checked').value);
+                
+                // 添加图片URL（如果有）
+                const imageUrlInput = document.getElementById('song-image-url').value.trim();
+                if (imageUrlInput) {
+                    formData.append('image', imageUrlInput);
+                }
+                
+                // 添加HTML文件（如果有）
+                if (selectedHtmlFile) {
+                    formData.append('htmlFile', selectedHtmlFile);
+                }
+                
+                // 添加乐谱文件（如果有）
+                const sheetMusicFile = document.getElementById('song-sheet-music')?.files[0];
+                if (sheetMusicFile) {
+                    formData.append('sheetMusic', sheetMusicFile);
+                }
+                
+                // 添加乐谱预览图文件（如果有）
+                const sheetMusicPreviewFile = document.getElementById('song-sheet-music-preview')?.files[0];
+                if (sheetMusicPreviewFile) {
+                    formData.append('sheetMusicPreview', sheetMusicPreviewFile);
+                }
+                
+                // 显示加载状态
+                const submitBtn = this.querySelector('button[type="submit"]');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa fa-circle-o-notch fa-spin mr-2"></i> 保存中...';
+                
+                // 发送实际的API请求
+                const token = localStorage.getItem('token');
+                // 使用明确的服务器地址，避免直接从文件系统访问时的问题
+                // 使用与服务器相同的端口
+            const port = window.location.port || '3004';
+            const baseUrl = `http://localhost:${port}`;
+                const url = formData.get('id') ? `${baseUrl}/api/admin/songs/${formData.get('id')}` : `${baseUrl}/api/admin/songs`;
+                const method = formData.get('id') ? 'PUT' : 'POST';
+                
+                console.log('发送请求到:', url);
+                console.log('请求方法:', method);
+                
+                // 添加请求超时处理
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
+                
+                try {
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: {
+                            // 不要设置Content-Type，让浏览器自动设置为multipart/form-data
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: formData,
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId); // 清除超时计时器
+                    
+                    console.log('响应状态:', response.status);
+                    console.log('响应状态文本:', response.statusText);
+                    
+                    // 先获取响应文本，以便在JSON解析失败时查看
+                    const responseText = await response.text();
+                    console.log('原始响应内容:', responseText.length > 1000 ? responseText.substring(0, 1000) + '...' : responseText);
+                    
+                    // 检查是否是JSON格式
+                    if (responseText.trim().startsWith('{')) {
+                        try {
+                            const result = JSON.parse(responseText);
+                            if (!result.success) {
+                                throw new Error(result.message || '保存失败');
+                            }
+                        } catch (jsonError) {
+                            throw new Error('JSON解析错误: ' + jsonError.message);
+                        }
+                    } else {
+                        throw new Error(`服务器返回非JSON响应 (${response.status} ${response.statusText})`);
+                    }
+                    
+                } catch (error) {
+                    clearTimeout(timeoutId); // 清除超时计时器
+                    if (error.name === 'AbortError') {
+                        throw new Error('请求超时，请检查网络连接');
+                    }
+                    throw error;
+                }
+                
+                // 关闭模态框
+                closeModal();
+                
+                // 显示成功通知
+                const action = formData.get('id') ? '更新' : '添加';
+                showNotification('success', `${action}成功`, `曲目${action}成功`);
+                
+                // 重新加载曲目列表
+                loadAdminSongs();
+            } catch (error) {
+                // 输出全面的错误信息到控制台用于调试
+                console.error('保存失败错误对象:', error);
+                console.error('错误类型:', error.constructor.name);
+                console.error('错误消息:', error.message);
+                console.error('错误堆栈:', error.stack);
+                
+                // 显示更详细的错误信息以便调试
+                const errorMessage = error.message || '未知错误';
+                showNotification('error', '保存失败', errorMessage + ' - 请检查控制台获取更多详情');
+                
+                // 恢复按钮状态
+                const submitBtn = this.querySelector('button[type="submit"]');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '保存';
+            }
+        });
+
+        // 生成难度星星
+        function generateDifficultyStars(difficulty) {
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                if (i <= difficulty) {
+                    stars += '<i class="fa fa-star text-yellow-400 transition-transform duration-300 hover:scale-110"></i>';
+                } else {
+                    stars += '<i class="fa fa-star-o text-gray-300 transition-transform duration-300 hover:scale-110"></i>';
+                }
+            }
+            return stars;
+        }
+        
+        // JWT令牌验证函数
+        function validateToken(token) {
+            try {
+                // 解码JWT令牌
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                // 检查令牌是否过期
+                const now = Math.floor(Date.now() / 1000);
+                if (payload.exp && payload.exp < now) {
+                    console.warn('Token已过期');
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                console.error('Token验证失败:', error);
+                return false;
+            }
+        }
+        
+        // 管理员登录函数
+        async function adminLogin() {
+            try {
+                console.log('尝试管理员登录...');
+                
+                // 添加请求超时处理
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
+                
+                // 显示登录状态提示
+                showNotification('info', '正在登录', '正在连接服务器...');
+                
+                // 使用与服务器相同的端口
+            const port = window.location.port || '3004';
+            const loginResponse = await fetch(`http://localhost:${port}/api/admin/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ username: 'admin', password: 'admin123' }),
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId); // 清除超时计时器
+                
+                console.log('登录响应状态:', loginResponse.status);
+                console.log('登录响应状态文本:', loginResponse.statusText);
+                
+                // 记录响应头信息用于调试
+                const responseHeaders = {};
+                loginResponse.headers.forEach((value, key) => {
+                    responseHeaders[key] = value;
+                });
+                console.log('登录响应头:', responseHeaders);
+                
+                if (loginResponse.ok) {
+                    const loginData = await loginResponse.json();
+                    console.log('登录响应数据:', loginData);
+                    if (loginData.success) {
+                        const token = loginData.token;
+                        localStorage.setItem('token', token);
+                        console.log('登录成功，已获取并保存token');
+                        showNotification('success', '登录成功', '已成功连接服务器');
+                        return token;
+                    } else {
+                        console.error('登录失败:', loginData.message);
+                        showNotification('error', '登录失败', loginData.message || '未知错误');
+                        throw new Error('登录失败: ' + (loginData.message || '未知错误'));
+                    }
+                } else {
+                    const errorText = await loginResponse.text();
+                    console.error('登录请求失败:', errorText);
+                    showNotification('error', '登录请求失败', 'HTTP ' + loginResponse.status);
+                    throw new Error('登录请求失败: HTTP ' + loginResponse.status);
+                }
+            } catch (loginError) {
+                console.error('登录过程发生错误:', loginError);
+                console.error('错误类型:', loginError.constructor.name);
+                console.error('错误堆栈:', loginError.stack);
+                
+                // 显示更详细的错误信息
+                let errorMessage = '登录过程出错: ';
+                if (loginError.name === 'AbortError') {
+                    errorMessage += '请求超时，请检查网络连接';
+                } else if (loginError.message.includes('Failed to fetch')) {
+                    errorMessage += '无法连接到服务器，请确保服务器正在运行';
+                } else {
+                    errorMessage += loginError.message;
+                }
+                
+                showNotification('error', '登录失败', errorMessage);
+                throw new Error(errorMessage);
+            }
+        }
+
+        // 加载曲目列表
+        async function loadAdminSongs(page = 1) {
+            try {
+                console.log('开始加载曲目列表...');
+                // 检查并确保有token
+                let token = localStorage.getItem('token');
+                console.log('本地token:', token ? '存在' : '不存在');
+                
+                // 验证token是否存在且有效
+                if (!token || !validateToken(token)) {
+                    console.log('未找到有效token，尝试管理员登录...');
+                    // 尝试管理员登录获取token
+                    try {
+                        token = await adminLogin();
+                        console.log('登录成功，继续加载数据...');
+                    } catch (loginError) {
+                        console.error('登录失败:', loginError);
+                        // 专门处理登录错误，显示更友好的提示
+                        const tableBody = document.getElementById('admin-songs-table-body');
+                        tableBody.innerHTML = `
+                            <tr>
+                                <td colspan="8" class="px-4 py-16 text-center">
+                                    <i class="fa fa-key text-3xl mb-4 text-amber-500"></i>
+                                    <p class="text-lg font-medium text-gray-700">登录失败</p>
+                                    <p class="text-sm text-gray-500 mt-2">${loginError.message}</p>
+                                    <div class="mt-4 bg-amber-50 p-4 rounded-lg text-sm text-amber-700 max-w-md mx-auto">
+                                        <p class="font-medium mb-2">可能的解决方法:</p>
+                                        <ul class="list-disc list-inside space-y-1">
+                                            <li>确保服务器正在运行 (http://localhost:3004)</li>
+                                            <li>检查网络连接是否正常</li>
+                                            <li>刷新页面后重试</li>
+                                        </ul>
+                                    </div>
+                                    <button class="mt-6 px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-all" onclick="loadAdminSongs(1)">
+                                        <i class="fa fa-refresh mr-2"></i>重新尝试登录
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                        return; // 终止函数执行，避免继续处理
+                    }
+                }
+                
+                // 获取筛选条件
+                const searchTerm = document.getElementById('admin-search-input').value;
+                const typeFilter = document.getElementById('admin-type-filter').value;
+                const difficultyFilter = document.getElementById('admin-difficulty-filter').value;
+                const sortFilter = document.getElementById('admin-sort-filter').value;
+                
+                console.log('筛选条件:', { searchTerm, typeFilter, difficultyFilter, sortFilter });
+                
+                // 构建请求URL - 使用绝对路径避免直接从文件系统访问时的问题
+                // 使用与服务器相同的端口
+        const port = window.location.port || '3004';
+        const baseUrl = `http://localhost:${port}`;
+                let url = `${baseUrl}/api/admin/songs?page=${page}&pageSize=10`;
+                
+                if (searchTerm) {
+                    url += `&search=${encodeURIComponent(searchTerm)}`;
+                }
+                if (typeFilter && typeFilter !== '') {
+                    // 根据类型值选择合适的参数名
+                    if (['男声', '女声'].includes(typeFilter)) {
+                        url += `&voicePart=${encodeURIComponent(typeFilter)}`;
+                    } else if (['中文', '外文'].includes(typeFilter)) {
+                        url += `&language=${encodeURIComponent(typeFilter)}`;
+                    } else {
+                        url += `&genre=${encodeURIComponent(typeFilter)}`;
+                    }
+                }
+                if (difficultyFilter && difficultyFilter !== '') {
+                    url += `&difficulty=${difficultyFilter}`;
+                }
+                if (sortFilter && sortFilter !== '') {
+                    // 转换排序值为服务器期望的格式
+                    switch (sortFilter) {
+                        case 'title':
+                            url += `&sort=title_asc`;
+                            break;
+                        case 'views':
+                        case 'difficulty':
+                            // 服务器端可能不支持这些排序方式
+                            url += `&sort=newest`;
+                            break;
+                        default:
+                            url += `&sort=${sortFilter}`;
+                    }
+                }
+                
+                console.log('请求URL:', url);
+                
+                // 清空选中数组
+                selectedSongIds = [];
+                document.getElementById('select-all').checked = false;
+                
+                // 显示加载状态
+                const tableBody = document.getElementById('admin-songs-table-body');
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="px-4 py-16 text-center bg-gradient-to-b from-gray-50 to-white rounded-lg shadow-sm">
+                            <i class="fa fa-circle-o-notch fa-spin text-3xl mb-4 text-primary animate-pulse"></i>
+                            <p class="text-lg font-medium text-gray-700">正在加载数据...</p>
+                            <p class="text-sm text-gray-500 mt-2">请稍候，我们正在为您整理曲目信息</p>
+                        </td>
+                    </tr>
+                `;
+                
+                // 发送请求获取真实数据
+                console.log('开始发送曲目列表请求...');
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // 添加JWT token认证
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                
+                console.log('曲目列表请求状态:', response.status);
+                
+                // 检查响应状态
+                if (!response.ok) {
+                    try {
+                        const errorText = await response.text();
+                        console.error('曲目列表请求失败:', errorText);
+                        
+                        // 如果是401错误，尝试重新登录并重试一次
+                        if (response.status === 401) {
+                            console.log('认证失败(401)，尝试重新登录并重试...');
+                            // 重新登录
+                            try {
+                                token = await adminLogin();
+                                console.log('已重新登录，准备重试请求');
+                                
+                                // 重试请求
+                                const retryResponse = await fetch(url, {
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': 'Bearer ' + token
+                                    }
+                                });
+                                
+                                console.log('重试请求状态:', retryResponse.status);
+                                
+                                if (!retryResponse.ok) {
+                                    throw new Error('重试请求失败: HTTP ' + retryResponse.status);
+                                }
+                                
+                                // 处理重试后的响应
+                                const retryData = await retryResponse.json();
+                                return handleSongsResponse(retryData, tableBody, page);
+                            } catch (retryLoginError) {
+                                // 重新登录也失败，显示登录错误
+                                console.error('重新登录失败:', retryLoginError);
+                                tableBody.innerHTML = `
+                                    <tr>
+                                        <td colspan="8" class="px-4 py-16 text-center">
+                                            <i class="fa fa-key text-3xl mb-4 text-amber-500"></i>
+                                            <p class="text-lg font-medium text-gray-700">认证失败</p>
+                                            <p class="text-sm text-gray-500 mt-2">需要重新登录: ${retryLoginError.message}</p>
+                                            <button class="mt-4 px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-all" onclick="loadAdminSongs()">
+                                                <i class="fa fa-refresh mr-2"></i>重新登录
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `;
+                                return;
+                            }
+                        }
+                        
+                        throw new Error('网络请求失败: HTTP ' + response.status + ' - ' + errorText);
+                    } catch (textError) {
+                        console.error('无法获取响应内容:', textError);
+                        throw new Error('网络请求失败: HTTP ' + response.status + ' - 无法获取响应内容');
+                    }
+                }
+                
+                // 尝试解析JSON响应
+                let data;
+                try {
+                    data = await response.json();
+                    console.log('曲目列表响应数据:', data);
+                    console.log('响应数据类型:', typeof data);
+                    console.log('响应数据是否包含data属性:', 'data' in data);
+                    if ('data' in data) {
+                        console.log('data属性类型:', typeof data.data);
+                        console.log('data属性是否包含items:', 'items' in data.data);
+                        if ('items' in data.data) {
+                            console.log('items数组长度:', data.data.items.length);
+                        }
+                    }
+                    // 输出完整的响应数据（用于调试）
+                    console.log('完整响应数据JSON:', JSON.stringify(data, null, 2));
+                    
+                    // 确保data和data.success存在
+                    if (data === undefined || data === null) {
+                        throw new Error('服务器返回了无效数据');
+                    }
+                } catch (jsonError) {
+                    console.error('JSON解析错误:', jsonError);
+                    throw new Error('数据解析失败: ' + jsonError.message);
+                }
+                
+                // 处理响应数据
+                return handleSongsResponse(data, tableBody, page);
+                
+            } catch (error) {
+                console.error('加载曲目失败:', error);
+                // 显示错误状态
+                const tableBody = document.getElementById('admin-songs-table-body');
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="px-4 py-16 text-center">
+                            <i class="fa fa-exclamation-circle text-3xl mb-4 text-red-500"></i>
+                            <p class="text-lg font-medium text-gray-700">加载失败，请稍后再试</p>
+                            <p class="text-sm text-gray-500 mt-2">具体错误: ${error.message}</p>
+                            <button class="mt-4 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90" onclick="loadAdminSongs(1)">
+                                    重试
+                                </button>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        // 处理曲目列表响应
+        function handleSongsResponse(data, tableBody, currentPage = 1) {
+            if (data.success) {
+                // 更新表格内容
+                tableBody.innerHTML = '';
+                
+                console.log('响应数据完整结构:', JSON.stringify(data, null, 2));
+                
+                // 简化适配服务器返回的数据结构
+                // 尝试多种可能的数据结构格式
+                let songs = [];
+                let totalItems = 0;
+                
+                // 格式1: 数据在data.data.items中
+                if (data.data && data.data.items) {
+                    songs = data.data.items;
+                    totalItems = data.data.totalItems || 0;
+                    console.log('格式1 - 找到数据在data.data.items中，数量:', songs.length);
+                }
+                // 格式2: 数据直接在data.items中
+                else if (data.items) {
+                    songs = data.items;
+                    totalItems = data.totalItems || 0;
+                    console.log('格式2 - 找到数据在data.items中，数量:', songs.length);
+                }
+                // 格式3: 数据是直接返回的数组
+                else if (Array.isArray(data)) {
+                    songs = data;
+                    totalItems = songs.length;
+                    console.log('格式3 - 数据是直接返回的数组，数量:', songs.length);
+                }
+                else {
+                    console.log('未找到预期的数据结构');
+                    songs = [];
+                    totalItems = 0;
+                }
+                
+                const totalPages = Math.ceil(totalItems / 10);
+                
+                // 添加明确的成功提示
+                const successMessage = document.createElement('div');
+                successMessage.className = 'p-4 bg-green-50 border border-green-200 rounded-lg mb-4';
+                successMessage.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fa fa-check-circle text-green-500 mr-2"></i>
+                        <h3 class="text-lg font-medium text-green-800">加载成功</h3>
+                    </div>
+                    <p class="text-green-700 mt-1">共找到 ${totalItems} 条曲目记录</p>
+                `;
+                
+                // 插入到表格前面
+                const tableContainer = tableBody.parentElement;
+                tableContainer.parentNode.insertBefore(successMessage, tableContainer);
+                
+                if (songs.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="px-4 py-16 text-center bg-gradient-to-b from-gray-50 to-white rounded-lg">
+                                <i class="fa fa-folder-open-o text-4xl mb-4 text-gray-400"></i>
+                                <p class="text-lg font-medium text-gray-700">没有找到符合条件的曲目</p>
+                                <p class="text-sm text-gray-500 mt-2">尝试调整筛选条件或添加新曲目</p>
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    songs.forEach(song => {
+                        const row = document.createElement('tr');
+                        row.className = 'hover:bg-gray-50';
+                        
+                        row.innerHTML = `
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <input type="checkbox" name="song-checkbox" value="${song.id}" class="rounded text-primary focus:ring-primary" />
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <div class="w-16 h-16 rounded-lg overflow-hidden">
+                                    <img src="${song.imageUrl || 'https://via.placeholder.com/80x80?text=音乐'}" alt="${song.title}" class="w-full h-full object-cover" />
+                                </div>
+                            </td>
+                            <td class="px-4 py-4">
+                                <div class="font-medium text-gray-900">${song.title}</div>
+                                <div class="text-sm text-gray-500">作曲家: ${song.composer || '未知'}</div>
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <div class="flex flex-wrap gap-2">
+                                    ${song.type ? `<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">${song.type}</span>` : ''}
+                                    ${song.type2 ? `<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">${song.type2}</span>` : ''}
+                                    ${song.type3 ? `<span class="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">${song.type3}</span>` : ''}
+                                </div>
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                ${generateDifficultyStars(song.difficulty)}
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                ${song.views || 0}
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 rounded-full text-xs font-medium ${song.status === 1 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                    ${song.status === 1 ? '启用' : '禁用'}
+                                </span>
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                                <button class="text-primary hover:text-primary/80 mr-3 edit-btn" data-id="${song.id}">编辑</button>
+                                <button class="text-red-500 hover:text-red-600 delete-btn" data-id="${song.id}" data-title="${song.title}">删除</button>
+                            </td>
+                        `;
+                        
+                        tableBody.appendChild(row);
+                    });
+                    
+                    // 绑定复选框事件
+                    document.querySelectorAll('input[name="song-checkbox"]').forEach(checkbox => {
+                        checkbox.addEventListener('change', function() {
+                            handleCheckboxClick(this);
+                        });
+                    });
+                    
+                    // 绑定编辑按钮事件
+                    document.querySelectorAll('.edit-btn').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const songId = this.dataset.id;
+                            editSong(songId);
+                        });
+                    });
+                    
+                    // 绑定删除按钮事件
+                    document.querySelectorAll('.delete-btn').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const songId = this.dataset.id;
+                            const songTitle = this.dataset.title;
+                            selectedSongIds = [songId];
+                            openDeleteModal(`确定要删除曲目 "${songTitle}" 吗？此操作无法撤销。`);
+                        });
+                    });
+                }
+                
+                // 更新总数
+                document.getElementById('total-count').textContent = totalItems;
+                
+                // 生成分页控件
+                renderAdminPagination(totalPages, currentPage);
+            } else {
+                // API返回失败时，显示错误信息
+                console.error('API返回失败:', data.message);
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="px-4 py-16 text-center">
+                            <i class="fa fa-exclamation-circle text-3xl mb-4 text-red-500"></i>
+                            <p class="text-lg font-medium text-gray-700">加载失败</p>
+                            <p class="text-sm text-gray-500 mt-2">${data.message || '服务器返回了错误信息'}</p>
+                            <button class="mt-4 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90" onclick="loadAdminSongs()">
+                                重试
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // 编辑曲目
+        async function editSong(songId) {
+            try {
+                // 显示加载状态
+                const modalTitle = document.getElementById('modal-title');
+                modalTitle.innerHTML = '<i class="fa fa-circle-o-notch fa-spin mr-2"></i> 加载中...';
+                
+                // 打开模态框
+                openModal();
+                
+                // 获取token
+                const token = localStorage.getItem('token');
+                
+                // 实际获取曲目详情API调用 - 使用绝对路径以避免net::ERR_NAME_NOT_RESOLVED错误
+                // 使用与服务器相同的端口
+            const port = window.location.port || '3004';
+            const response = await fetch(`http://localhost:${port}/api/admin/songs/${songId}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('网络请求失败');
+                }
+                
+                const result = await response.json();
+                if (!result.success) {
+                    throw new Error(result.message || '获取曲目详情失败');
+                }
+                
+                const songData = result.data;
+                
+                // 填充表单
+                document.getElementById('song-id').value = songData.id;
+                document.getElementById('song-title').value = songData.title;
+                document.getElementById('song-composer').value = songData.composer;
+                document.getElementById('song-type').value = songData.type || '';
+                document.getElementById('song-type2').value = songData.type2 || '';
+                document.getElementById('song-type3').value = songData.type3 || '';
+                document.getElementById('song-difficulty').value = songData.difficulty;
+                document.getElementById('song-description').value = songData.description || '';
+                
+                // 设置标签
+                if (songData.tags && Array.isArray(songData.tags)) {
+                    document.getElementById('song-tags').value = JSON.stringify(songData.tags);
+                } else {
+                    document.getElementById('song-tags').value = '[]';
+                }
+                
+                // 设置状态单选按钮
+                if (songData.status === 1) {
+                    document.querySelector('input[name="status"][value="1"]').checked = true;
+                } else {
+                    document.querySelector('input[name="status"][value="0"]').checked = true;
+                }
+                
+                // 设置图片预览
+                if (songData.imageUrl) {
+                    const previewImg = document.getElementById('preview-img');
+                    const imagePreview = document.getElementById('image-preview');
+                    const songImageUrlInput = document.getElementById('song-image-url');
+                    
+                    previewImg.src = songData.imageUrl;
+                    songImageUrlInput.value = songData.imageUrl;
+                    imageUrl = songData.imageUrl;
+                    imagePreview.classList.remove('hidden');
+                }
+                
+                // 设置乐谱预览图
+                if (songData.sheetMusicPreviewPath) {
+                    const previewContainer = document.getElementById('sheet-music-preview-container');
+                    const previewImg = document.getElementById('sheet-music-preview-img');
+                    // 确保使用完整的URL路径
+                    const previewUrl = songData.sheetMusicPreviewPath.startsWith('http') ? 
+                        songData.sheetMusicPreviewPath : 
+                        `/${songData.sheetMusicPreviewPath}`;
+                    previewImg.src = previewUrl;
+                    previewContainer.classList.remove('hidden');
+                }
+                
+                // 更新模态框标题
+                modalTitle.textContent = '编辑曲目';
+                
+                // 设置当前编辑的曲目ID
+                currentSongId = songId;
+            } catch (error) {
+                console.error('获取曲目详情失败:', error);
+                closeModal();
+                showNotification('error', '加载失败', '无法获取曲目详情，请稍后再试');
+            }
+        }
+
+        // 生成后台分页控件
+        function renderAdminPagination(totalPages, currentPage) {
+            const paginationContainer = document.getElementById('admin-pagination');
+            paginationContainer.innerHTML = '';
+
+            const leftInfo = document.createElement('div');
+            leftInfo.className = 'text-sm text-gray-500';
+            leftInfo.textContent = `显示第 ${currentPage} 页，共 ${totalPages} 页`;
+            paginationContainer.appendChild(leftInfo);
+
+            const paginationControls = document.createElement('div');
+            paginationControls.className = 'flex items-center space-x-1';
+
+            // 上一页按钮
+            const prevButton = document.createElement('button');
+            prevButton.className = `px-3 py-1 rounded border ${currentPage === 1 ? 'border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`;
+            prevButton.innerHTML = '<i class="fa fa-chevron-left"></i>';
+            prevButton.disabled = currentPage === 1;
+            prevButton.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    loadAdminSongs(currentPage - 1);
+                }
+            });
+            paginationControls.appendChild(prevButton);
+
+            // 页码按钮
+            const showPages = [];
+            if (totalPages <= 7) {
+                for (let i = 1; i <= totalPages; i++) {
+                    showPages.push(i);
+                }
+            } else {
+                if (currentPage <= 4) {
+                    for (let i = 1; i <= 5; i++) {
+                        showPages.push(i);
+                    }
+                    showPages.push('...', totalPages);
+                } else if (currentPage >= totalPages - 3) {
+                    showPages.push(1, '...');
+                    for (let i = totalPages - 4; i <= totalPages; i++) {
+                        showPages.push(i);
+                    }
+                } else {
+                    showPages.push(1, '...');
+                    for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+                        showPages.push(i);
+                    }
+                    showPages.push('...', totalPages);
+                }
+            }
+
+            showPages.forEach(page => {
+                if (page === '...') {
+                    const dots = document.createElement('span');
+                    dots.className = 'px-3 py-1 text-gray-500';
+                    dots.textContent = '...';
+                    paginationControls.appendChild(dots);
+                } else {
+                    const pageButton = document.createElement('button');
+                    pageButton.className = `px-3 py-1 rounded border ${page === currentPage ? 'border-primary bg-primary text-white' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`;
+                    pageButton.textContent = page;
+                    pageButton.addEventListener('click', () => {
+                        loadAdminSongs(page);
+                    });
+                    paginationControls.appendChild(pageButton);
+                }
+            });
+
+            // 下一页按钮
+            const nextButton = document.createElement('button');
+            nextButton.className = `px-3 py-1 rounded border ${currentPage === totalPages ? 'border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`;
+            nextButton.innerHTML = '<i class="fa fa-chevron-right"></i>';
+            nextButton.disabled = currentPage === totalPages;
+            nextButton.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    loadAdminSongs(currentPage + 1);
+                }
+            });
+            paginationControls.appendChild(nextButton);
+
+            paginationContainer.appendChild(paginationControls);
+        }
+
+        // 初始化筛选器事件
+        function initFilters() {
+            // 搜索框
+            document.getElementById('admin-search-input').addEventListener('input', function() {
+                // 防抖处理
+                clearTimeout(this.searchTimeout);
+                this.searchTimeout = setTimeout(() => {
+                    loadAdminSongs();
+                }, 500);
+            });
+
+            // 类型筛选
+            document.getElementById('admin-type-filter').addEventListener('change', loadAdminSongs);
+
+            // 难度筛选
+            document.getElementById('admin-difficulty-filter').addEventListener('change', loadAdminSongs);
+
+            // 排序筛选
+            document.getElementById('admin-sort-filter').addEventListener('change', loadAdminSongs);
+        }
+
+        // 页面加载完成后执行
+        window.addEventListener('DOMContentLoaded', () => {
+            initTagManagement();
+            initFilters();
+            loadAdminSongs();
+            initSidebarNavigation();
+        });
+        
+        // 初始化侧边栏导航功能
+        function initSidebarNavigation() {
+            // 获取所有侧边栏导航项
+            const sidebarItems = document.querySelectorAll('.sidebar-item');
+            const modules = document.querySelectorAll('.module-content');
+            const logoutBtn = document.getElementById('logout-btn');
+            
+            // 设置默认激活的模块
+            showModule('songs');
+            
+            // 为每个导航项添加点击事件
+            sidebarItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    // 如果点击的是退出按钮，则不执行内容切换
+                    if (this.id === 'logout-btn') return;
+                    
+                    // 阻止事件冒泡
+                    e.preventDefault();
+                    
+                    // 获取当前项的模块ID
+                    const moduleId = this.getAttribute('data-module');
+                    
+                    // 如果模块ID存在，则显示对应的模块
+                    if (moduleId) {
+                        showModule(moduleId);
+                    }
+                });
+            });
+            
+            // 为退出按钮添加点击事件
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (confirm('确定要退出登录吗？')) {
+                        // 执行退出登录操作
+                        logout();
+                    }
+                });
+            }
+        }
+        
+        // 显示指定的模块，隐藏其他模块
+        function showModule(moduleId) {
+            const modules = document.querySelectorAll('.module-content');
+            const sidebarItems = document.querySelectorAll('.sidebar-item');
+            
+            // 隐藏所有模块
+            modules.forEach(module => {
+                module.classList.add('hidden');
+            });
+            
+            // 移除所有导航项的激活状态
+            sidebarItems.forEach(item => {
+                item.classList.remove('sidebar-item-active');
+            });
+            
+            // 显示指定的模块
+            const targetModule = document.getElementById(`${moduleId}-module`);
+            if (targetModule) {
+                targetModule.classList.remove('hidden');
+            }
+            
+            // 为对应的导航项添加激活状态
+            const targetItem = document.querySelector(`.sidebar-item[data-module="${moduleId}"]`);
+            if (targetItem) {
+                targetItem.classList.add('sidebar-item-active');
+            }
+            
+            // 加载对应模块的数据
+            loadModuleData(moduleId);
+            
+            // 滚动到页面顶部，确保用户能立即看到内容
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // 加载指定模块的数据
+        function loadModuleData(moduleId) {
+            switch(moduleId) {
+                case 'songs':
+                    // 曲目管理的数据已经在页面加载时加载
+                    break;
+                case 'users':
+                    loadUsersData();
+                    break;
+                case 'strategies':
+                    loadStrategiesData();
+                    break;
+                case 'analysis':
+                    loadAnalysisData();
+                    break;
+                case 'settings':
+                    loadSettingsData();
+                    break;
+                default:
+                    break;
+            }
+        }
+        
+        // 加载用户数据
+        function loadUsersData() {
+            // 这里是模拟数据，实际应用中应该从服务器获取
+            const userTableBody = document.getElementById('users-table-body');
+            const totalUsersCount = document.getElementById('total-users-count');
+            const usersPagination = document.getElementById('users-pagination');
+            
+            // 模拟用户数据
+            const users = [
+                {id: 1, username: 'admin', registerTime: '2023-01-15', status: 'active'},
+                {id: 2, username: 'user1', registerTime: '2023-02-20', status: 'active'},
+                {id: 3, username: 'user2', registerTime: '2023-03-10', status: 'inactive'},
+                {id: 4, username: 'user3', registerTime: '2023-04-05', status: 'active'},
+                {id: 5, username: 'user4', registerTime: '2023-05-12', status: 'active'}
+            ];
+            
+            // 更新总用户数
+            if (totalUsersCount) {
+                totalUsersCount.textContent = users.length;
+            }
+            
+            // 清空用户列表
+            if (userTableBody) {
+                userTableBody.innerHTML = '';
+            }
+            
+            // 填充用户列表
+            if (userTableBody) {
+                users.forEach(user => {
+                    const row = document.createElement('tr');
+                    
+                    // 状态样式
+                    let statusClass = 'bg-red-100 text-red-800';
+                    let statusText = '禁用';
+                    if (user.status === 'active') {
+                        statusClass = 'bg-green-100 text-green-800';
+                        statusText = '活跃';
+                    }
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <input type="checkbox" class="form-checkbox user-checkbox" data-id="${user.id}">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.id}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${user.username}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.registerTime}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
+                                ${statusText}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="text-indigo-600 hover:text-indigo-900 mr-3 edit-user-btn" data-id="${user.id}">
+                                <i class="fa fa-edit"></i> 编辑
+                            </button>
+                            <button class="text-red-600 hover:text-red-900 delete-user-btn" data-id="${user.id}">
+                                <i class="fa fa-trash"></i> 删除
+                            </button>
+                        </td>
+                    `;
+                    
+                    userTableBody.appendChild(row);
+                });
+            }
+            
+            // 初始化用户选择功能
+            initUserSelection();
+        }
+        
+        // 初始化用户选择功能
+        function initUserSelection() {
+            const selectAllCheckbox = document.getElementById('user-select-all');
+            const userCheckboxes = document.querySelectorAll('.user-checkbox');
+            
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    const isChecked = this.checked;
+                    userCheckboxes.forEach(checkbox => {
+                        checkbox.checked = isChecked;
+                    });
+                });
+            }
+        }
+        
+        // 加载攻略数据
+        function loadStrategiesData() {
+            // 这里是模拟数据，实际应用中应该从服务器获取
+            const strategiesTableBody = document.getElementById('strategies-table-body');
+            
+            // 模拟攻略数据
+            const strategies = [
+                {id: 1, title: '声乐考试准备全攻略', type: 'exam', createTime: '2023-01-10'},
+                {id: 2, title: '美声演唱技巧进阶指南', type: 'skills', createTime: '2023-01-20'},
+                {id: 3, title: '如何选择适合自己的艺考曲目', type: 'selection', createTime: '2023-02-15'},
+                {id: 4, title: '日常声音训练计划', type: 'voice', createTime: '2023-03-05'},
+                {id: 5, title: '考试前心理调整方法', type: 'psychology', createTime: '2023-03-20'},
+                {id: 6, title: '音乐学院选择指南', type: 'school', createTime: '2023-04-10'}
+            ];
+            
+            // 清空攻略列表
+            if (strategiesTableBody) {
+                strategiesTableBody.innerHTML = '';
+            }
+            
+            // 填充攻略列表
+            if (strategiesTableBody) {
+                strategies.forEach(strategy => {
+                    const row = document.createElement('tr');
+                    
+                    // 攻略类型文本
+                    let typeText = '';
+                    switch(strategy.type) {
+                        case 'exam':
+                            typeText = '考试准备';
+                            break;
+                        case 'skills':
+                            typeText = '演唱技巧';
+                            break;
+                        case 'selection':
+                            typeText = '曲目选择';
+                            break;
+                        case 'voice':
+                            typeText = '声音训练';
+                            break;
+                        case 'psychology':
+                            typeText = '心理调整';
+                            break;
+                        case 'school':
+                            typeText = '院校选择';
+                            break;
+                        default:
+                            typeText = '其他';
+                    }
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${strategy.id}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${strategy.title}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                ${typeText}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${strategy.createTime}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="text-indigo-600 hover:text-indigo-900 mr-3 edit-strategy-btn" data-id="${strategy.id}">
+                                <i class="fa fa-edit"></i> 编辑
+                            </button>
+                            <button class="text-red-600 hover:text-red-900 delete-strategy-btn" data-id="${strategy.id}">
+                                <i class="fa fa-trash"></i> 删除
+                            </button>
+                        </td>
+                    `;
+                    
+                    strategiesTableBody.appendChild(row);
+                });
+            }
+            
+            // 初始化攻略管理功能
+            initStrategyManagement();
+        }
+        
+        // 加载数据分析数据
+        function loadAnalysisData() {
+            // 这里是模拟数据，实际应用中应该从服务器获取
+            const totalSongsCount = document.getElementById('total-songs-count');
+            const totalUserCount = document.getElementById('total-user-count');
+            const totalViewsCount = document.getElementById('total-views-count');
+            const popularSongsTable = document.getElementById('popular-songs-table');
+            
+            // 更新统计数据
+            if (totalSongsCount) totalSongsCount.textContent = '58';
+            if (totalUserCount) totalUserCount.textContent = '156';
+            if (totalViewsCount) totalViewsCount.textContent = '3,247';
+            
+            // 模拟热门曲目数据
+            const popularSongs = [
+                {rank: 1, name: '我的太阳', composer: '卡普阿', type: '歌剧选曲', views: '456'},
+                {rank: 2, name: '今夜无人入睡', composer: '普契尼', type: '歌剧选曲', views: '389'},
+                {rank: 3, name: '负心人', composer: '卡尔蒂洛', type: '艺术歌曲', views: '324'},
+                {rank: 4, name: '月亮颂', composer: '德沃夏克', type: '艺术歌曲', views: '298'},
+                {rank: 5, name: '桑塔露琪亚', composer: '科特劳', type: '民谣', views: '276'}
+            ];
+            
+            // 清空热门曲目列表
+            if (popularSongsTable) {
+                popularSongsTable.innerHTML = '';
+            }
+            
+            // 填充热门曲目列表
+            if (popularSongsTable) {
+                popularSongs.forEach(song => {
+                    const row = document.createElement('tr');
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${song.rank}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${song.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${song.composer}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                ${song.type}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${song.views}</td>
+                    `;
+                    
+                    popularSongsTable.appendChild(row);
+                });
+            }
+            
+            // 初始化图表
+            initCharts();
+        }
+        
+        // 初始化图表
+        function initCharts() {
+            // 这里是简化版的图表初始化，实际应用中可以使用Chart.js等库
+            const songTypesChart = document.getElementById('song-types-chart');
+            const monthlyViewsChart = document.getElementById('monthly-views-chart');
+            
+            // 模拟曲目类型分布图表
+            if (songTypesChart) {
+                songTypesChart.innerHTML = `
+                    <div class="flex items-center justify-center h-full">
+                        <div class="w-48 h-48 rounded-full border-8 border-blue-500 border-l-transparent border-r-transparent border-t-green-500 border-b-purple-500 relative">
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-xl font-bold text-gray-800">58</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // 模拟月度浏览趋势图表
+            if (monthlyViewsChart) {
+                monthlyViewsChart.innerHTML = `
+                    <div class="h-full flex items-end justify-around gap-2 p-4">
+                        <div class="w-8 bg-blue-500 rounded-t-md" style="height: 30%"></div>
+                        <div class="w-8 bg-blue-500 rounded-t-md" style="height: 45%"></div>
+                        <div class="w-8 bg-blue-500 rounded-t-md" style="height: 60%"></div>
+                        <div class="w-8 bg-blue-500 rounded-t-md" style="height: 35%"></div>
+                        <div class="w-8 bg-blue-500 rounded-t-md" style="height: 70%"></div>
+                        <div class="w-8 bg-blue-500 rounded-t-md" style="height: 50%"></div>
+                        <div class="w-8 bg-blue-500 rounded-t-md" style="height: 80%"></div>
+                    </div>
+                `;
+            }
+        }
+        
+        // 加载系统设置数据
+        function loadSettingsData() {
+            // 这里是模拟数据，实际应用中应该从服务器获取
+            // 注意：表单中的默认值已经在HTML中设置
+        }
+        
+        // 退出登录功能
+        function logout() {
+            // 模拟退出登录操作
+            alert('退出登录成功！');
+            // 在实际应用中，这里应该跳转到登录页面
+            // window.location.href = 'login.html';
+        }
+        
+        // 初始化攻略管理功能
+        function initStrategyManagement() {
+            const addStrategyBtn = document.getElementById('add-strategy-btn');
+            const strategyModal = document.getElementById('strategy-modal');
+            const closeStrategyModalBtn = document.getElementById('close-strategy-modal-btn');
+            const cancelStrategyModalBtn = document.getElementById('cancel-strategy-modal-btn');
+            const strategyForm = document.getElementById('strategy-form');
+            const strategyModalTitle = document.getElementById('strategy-modal-title');
+            const strategyIdInput = document.getElementById('strategy-id');
+            
+            // 添加攻略按钮点击事件
+            if (addStrategyBtn) {
+                addStrategyBtn.addEventListener('click', function() {
+                    strategyModalTitle.textContent = '添加攻略';
+                    strategyIdInput.value = '';
+                    strategyForm.reset();
+                    // 设置今天的日期为默认值
+                    const today = new Date().toISOString().split('T')[0];
+                    document.getElementById('strategy-create-time').value = today;
+                    openStrategyModal();
+                });
+            }
+            
+            // 关闭模态框按钮点击事件
+            if (closeStrategyModalBtn) {
+                closeStrategyModalBtn.addEventListener('click', closeStrategyModal);
+            }
+            
+            // 取消按钮点击事件
+            if (cancelStrategyModalBtn) {
+                cancelStrategyModalBtn.addEventListener('click', closeStrategyModal);
+            }
+            
+            // 表单提交事件
+            if (strategyForm) {
+                strategyForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // 获取表单数据
+                    const strategyId = strategyIdInput.value;
+                    const title = document.getElementById('strategy-title').value;
+                    const type = document.getElementById('strategy-type').value;
+                    const content = document.getElementById('strategy-content').value;
+                    const createTime = document.getElementById('strategy-create-time').value;
+                    
+                    // 模拟保存操作
+                    if (strategyId) {
+                        // 编辑攻略
+                        showNotification('攻略编辑成功！');
+                    } else {
+                        // 添加攻略
+                        showNotification('攻略添加成功！');
+                    }
+                    
+                    // 关闭模态框
+                    closeStrategyModal();
+                    
+                    // 重新加载攻略数据
+                    loadStrategiesData();
+                });
+            }
+            
+            // 初始化编辑和删除攻略按钮
+            initStrategyActionButtons();
+        }
+        
+        // 初始化攻略操作按钮
+        function initStrategyActionButtons() {
+            const editStrategyBtns = document.querySelectorAll('.edit-strategy-btn');
+            const deleteStrategyBtns = document.querySelectorAll('.delete-strategy-btn');
+            const strategyModal = document.getElementById('strategy-modal');
+            const strategyModalTitle = document.getElementById('strategy-modal-title');
+            
+            // 编辑攻略按钮点击事件
+            editStrategyBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const strategyId = this.getAttribute('data-id');
+                    // 模拟获取攻略数据
+                    const strategies = [
+                        {id: 1, title: '声乐考试准备全攻略', type: 'exam', createTime: '2023-01-10'},
+                        {id: 2, title: '美声演唱技巧进阶指南', type: 'skills', createTime: '2023-01-20'},
+                        {id: 3, title: '如何选择适合自己的艺考曲目', type: 'selection', createTime: '2023-02-15'},
+                        {id: 4, title: '日常声音训练计划', type: 'voice', createTime: '2023-03-05'},
+                        {id: 5, title: '考试前心理调整方法', type: 'psychology', createTime: '2023-03-20'},
+                        {id: 6, title: '音乐学院选择指南', type: 'school', createTime: '2023-04-10'}
+                    ];
+                    
+                    const strategy = strategies.find(s => s.id.toString() === strategyId);
+                    if (strategy) {
+                        strategyModalTitle.textContent = '编辑攻略';
+                        document.getElementById('strategy-id').value = strategy.id;
+                        document.getElementById('strategy-title').value = strategy.title;
+                        document.getElementById('strategy-type').value = strategy.type;
+                        document.getElementById('strategy-content').value = '这是攻略内容...'; // 模拟内容
+                        document.getElementById('strategy-create-time').value = strategy.createTime;
+                        openStrategyModal();
+                    }
+                });
+            });
+            
+            // 删除攻略按钮点击事件
+            deleteStrategyBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const strategyId = this.getAttribute('data-id');
+                    if (confirm('确定要删除这条攻略吗？此操作无法撤销。')) {
+                        // 模拟删除操作
+                        showNotification('攻略删除成功！');
+                        // 重新加载攻略数据
+                        loadStrategiesData();
+                    }
+                });
+            });
+        }
+        
+        // 打开攻略模态框
+        function openStrategyModal() {
+            const strategyModal = document.getElementById('strategy-modal');
+            if (strategyModal) {
+                strategyModal.classList.remove('hidden');
+                strategyModal.classList.add('flex');
+            }
+        }
+        
+        // 关闭攻略模态框
+        function closeStrategyModal() {
+            const strategyModal = document.getElementById('strategy-modal');
+            if (strategyModal) {
+                strategyModal.classList.add('hidden');
+                strategyModal.classList.remove('flex');
+            }
+        }
+
+
+        
+        // 移动端菜单切换
+        function setupMobileMenu() {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            if (mobileMenuButton && mobileMenu) {
+                mobileMenuButton.addEventListener('click', function() {
+                    mobileMenu.classList.toggle('hidden');
+                });
+            }
+        }
+        
+        // 初始化所有功能
+        function initApp() {
+            setupMobileMenu();
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>

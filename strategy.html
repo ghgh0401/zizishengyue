@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仔仔艺考声乐助手 - 备考攻略</title>
+    <script>
+        // 确保页面在正确的协议和端口打开
+        if (window.location.protocol !== 'http:' || window.location.port !== '3004') {
+            console.log('检测到错误的协议或端口，正在重定向到正确的URL...');
+            const path = window.location.pathname.split('/').pop();
+            window.location.href = `http://localhost:3004/${path}`;
+        }
+    </script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- 配置Tailwind自定义颜色 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1a56db',  // 蓝色主题
+                        secondary: '#3b82f6',
+                        accent: '#60a5fa',
+                        dark: '#1e3a8a',
+                        light: '#bfdbfe',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <!-- 自定义样式 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .card-hover {
+                transition: all 0.3s ease;
+            }
+            .card-hover:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            }
+            .btn-primary {
+                @apply bg-primary text-white font-medium px-6 py-3 rounded-lg transition duration-300 hover:bg-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary;
+            }
+            .btn-secondary {
+                @apply bg-white text-primary font-medium px-6 py-3 rounded-lg border border-primary transition duration-300 hover:bg-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary;
+            }
+            .nav-item {
+                @apply px-4 py-2 text-gray-300 hover:text-white transition duration-200;
+            }
+            .nav-item-active {
+                @apply px-4 py-2 text-white border-b-2 border-white font-medium;
+            }
+            .filter-btn {
+                @apply px-4 py-2 rounded-full transition duration-200;
+            }
+            .filter-btn-active {
+                @apply bg-primary text-white;
+            }
+            .filter-btn-inactive {
+                @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- 导航栏 -->
+    <header class="bg-primary shadow-md">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-music text-2xl text-white"></i>
+                <span class="text-xl font-bold text-white">仔仔艺考声乐助手</span>
+            </div>
+            <nav class="hidden md:flex space-x-1">
+                <a href="index.html" class="nav-item">首页</a>
+                <a href="song-library.html" class="nav-item">曲目库</a>
+                <a href="strategy.html" class="nav-item-active">备考攻略</a>
+                <a href="user-center.html" class="nav-item">个人中心</a>
+                <a href="admin.html" class="nav-item">后台管理</a>
+            </nav>
+
+            <!-- 移动端菜单按钮 -->
+            <button class="md:hidden text-white text-xl" id="mobile-menu-button">
+                <i class="fa fa-bars"></i>
+            </button>
+        </div>
+        <!-- 移动端菜单 -->
+        <div class="md:hidden hidden" id="mobile-menu">
+            <a href="index.html" class="block px-4 py-2 bg-primary text-gray-300 hover:text-white border-b border-gray-700">首页</a>
+            <a href="song-library.html" class="block px-4 py-2 bg-primary text-gray-300 hover:text-white border-b border-gray-700">曲目库</a>
+            <a href="strategy.html" class="block px-4 py-2 bg-primary text-white border-b border-gray-700">备考攻略</a>
+            <a href="admin.html" class="block px-4 py-2 bg-primary text-gray-300 hover:text-white">后台管理</a>
+        </div>
+    </header>
+
+    <!-- 主要内容 -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- 页面标题 -->
+        <section class="relative rounded-2xl overflow-hidden mb-12 bg-gradient-to-r from-primary to-dark">
+            <div class="absolute inset-0 opacity-20">
+                <img src="https://picsum.photos/id/1068/1200/300" alt="学习背景" class="w-full h-full object-cover" />
+            </div>
+            <div class="relative py-12 px-8 text-center text-white z-10">
+                <h1 class="text-3xl md:text-4xl font-bold mb-3 text-shadow">声乐备考攻略</h1>
+                <p class="text-lg max-w-3xl mx-auto">专业、全面的备考指南，助你顺利通过艺术考试，实现音乐梦想</p>
+            </div>
+        </section>
+
+        <!-- 攻略分类 -->
+        <section class="mb-12">
+            <div class="flex flex-wrap gap-2" id="strategy-filters">
+                <button class="filter-btn filter-btn-active" data-category="all">全部攻略</button>
+                <button class="filter-btn filter-btn-inactive" data-category="exam-prep">考试准备</button>
+                <button class="filter-btn filter-btn-inactive" data-category="singing-tech">演唱技巧</button>
+                <button class="filter-btn filter-btn-inactive" data-category="repertoire">曲目选择</button>
+                <button class="filter-btn filter-btn-inactive" data-category="voice-train">声音训练</button>
+                <button class="filter-btn filter-btn-inactive" data-category="mental">心理调整</button>
+                <button class="filter-btn filter-btn-inactive" data-category="school">院校选择</button>
+            </div>
+        </section>
+
+        <!-- 内容布局：左侧攻略列表，右侧热门和推荐 -->
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- 左侧攻略列表 -->
+            <div class="lg:w-2/3">
+                <!-- 热门攻略区域 -->
+                <section class="mb-12">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                            <i class="fa fa-fire text-orange-500 mr-3"></i>
+                            热门攻略
+                        </h2>
+                        <div class="flex space-x-1">
+                            <button class="w-8 h-8 flex items-center justify-center rounded-full bg-primary text-white" data-tab="hot"><i class="fa fa-star"></i></button>
+                            <button class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 text-gray-600 hover:bg-primary hover:text-white transition duration-200" data-tab="newest"><i class="fa fa-clock-o"></i></button>
+                        </div>
+                    </div>
+                    
+                    <!-- 热门攻略轮播 -->
+                    <div class="relative overflow-hidden rounded-xl shadow-lg h-80 mb-8">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent z-10"></div>
+                        <img src="https://picsum.photos/id/1019/1200/500" alt="热门攻略" class="w-full h-full object-cover" />
+                        <div class="absolute bottom-0 left-0 right-0 p-6 z-20">
+                            <span class="inline-block px-3 py-1 bg-primary text-white text-xs rounded-full mb-3">考试准备</span>
+                            <h3 class="text-2xl font-bold text-white mb-2">2023年艺术院校声乐考试最新政策解读与应对策略</h3>
+                            <div class="flex items-center text-white/80 text-sm">
+                                <span><i class="fa fa-user-o mr-1"></i> 王教授</span>
+                                <span class="mx-3">•</span>
+                                <span><i class="fa fa-calendar-o mr-1"></i> 2023-05-15</span>
+                                <span class="mx-3">•</span>
+                                <span><i class="fa fa-eye mr-1"></i> 12,456</span>
+                            </div>
+                        </div>
+                        <!-- 轮播控制 -->
+                        <div class="absolute bottom-4 right-4 flex space-x-2 z-20">
+                            <button class="w-3 h-3 rounded-full bg-white opacity-100"></button>
+                            <button class="w-3 h-3 rounded-full bg-white opacity-50"></button>
+                            <button class="w-3 h-3 rounded-full bg-white opacity-50"></button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 攻略列表 -->
+                <section class="mb-12">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">攻略文章列表</h2>
+                    
+                    <!-- 攻略列表容器 -->
+                    <div id="strategy-list">
+                        <!-- 攻略文章项 -->
+                        <div class="bg-white rounded-xl shadow-md p-6 mb-6 card-hover">
+                            <div class="flex flex-col md:flex-row gap-6">
+                                <div class="md:w-1/3">
+                                    <div class="relative rounded-lg overflow-hidden h-48">
+                                        <img src="https://picsum.photos/id/1039/500/300" alt="备考攻略" class="w-full h-full object-cover" />
+                                    </div>
+                                </div>
+                                <div class="md:w-2/3">
+                                    <div class="flex items-center mb-2">
+                                        <span class="inline-block px-3 py-1 bg-blue-100 text-primary text-xs rounded-full mr-2">演唱技巧</span>
+                                        <span class="text-gray-500 text-sm"><i class="fa fa-calendar-o mr-1"></i> 2023-04-20</span>
+                                    </div>
+                                    <h3 class="text-xl font-bold text-gray-800 mb-3 hover:text-primary transition duration-200">
+                                        <a href="strategy-detail.html?id=1">如何掌握气息控制，让你的高音更稳定持久</a>
+                                    </h3>
+                                    <p class="text-gray-600 mb-4 line-clamp-3">气息控制是声乐学习的基础，也是许多考生的难点。本文从呼吸方法、气息训练和实战应用三个方面，详细讲解如何科学地控制气息，让你的高音更加稳定持久... </p>
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex items-center">
+                                            <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="作者头像" class="w-8 h-8 rounded-full mr-2" />
+                                            <span class="text-gray-700">李老师</span>
+                                        </div>
+                                        <div class="flex items-center text-gray-500 text-sm space-x-4">
+                                            <span><i class="fa fa-eye mr-1"></i> 8,742</span>
+                                            <span><i class="fa fa-comment-o mr-1"></i> 128</span>
+                                            <span><i class="fa fa-thumbs-o-up mr-1"></i> 532</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-md p-6 mb-6 card-hover">
+                            <div class="flex flex-col md:flex-row gap-6">
+                                <div class="md:w-1/3">
+                                    <div class="relative rounded-lg overflow-hidden h-48">
+                                        <img src="https://picsum.photos/id/1059/500/300" alt="备考攻略" class="w-full h-full object-cover" />
+                                    </div>
+                                </div>
+                                <div class="md:w-2/3">
+                                    <div class="flex items-center mb-2">
+                                        <span class="inline-block px-3 py-1 bg-green-100 text-green-700 text-xs rounded-full mr-2">曲目选择</span>
+                                        <span class="text-gray-500 text-sm"><i class="fa fa-calendar-o mr-1"></i> 2023-05-10</span>
+                                    </div>
+                                    <h3 class="text-xl font-bold text-gray-800 mb-3 hover:text-primary transition duration-200">
+                                        <a href="strategy-detail.html?id=2">艺考曲目选择指南：如何找到最适合自己的作品</a>
+                                    </h3>
+                                    <p class="text-gray-600 mb-4 line-clamp-3">选择合适的考试曲目对艺考至关重要。本文将从音域、音色、风格把握和个人特点四个维度，教你如何科学选择能够充分展示自己优势的曲目，避免常见的选曲误区... </p>
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex items-center">
+                                            <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="作者头像" class="w-8 h-8 rounded-full mr-2" />
+                                            <span class="text-gray-700">张教授</span>
+                                        </div>
+                                        <div class="flex items-center text-gray-500 text-sm space-x-4">
+                                            <span><i class="fa fa-eye mr-1"></i> 10,356</span>
+                                            <span><i class="fa fa-comment-o mr-1"></i> 187</span>
+                                            <span><i class="fa fa-thumbs-o-up mr-1"></i> 625</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-md p-6 mb-6 card-hover">
+                            <div class="flex flex-col md:flex-row gap-6">
+                                <div class="md:w-1/3">
+                                    <div class="relative rounded-lg overflow-hidden h-48">
+                                        <img src="https://picsum.photos/id/1070/500/300" alt="备考攻略" class="w-full h-full object-cover" />
+                                    </div>
+                                </div>
+                                <div class="md:w-2/3">
+                                    <div class="flex items-center mb-2">
+                                        <span class="inline-block px-3 py-1 bg-purple-100 text-purple-700 text-xs rounded-full mr-2">心理调整</span>
+                                        <span class="text-gray-500 text-sm"><i class="fa fa-calendar-o mr-1"></i> 2023-05-05</span>
+                                    </div>
+                                    <h3 class="text-xl font-bold text-gray-800 mb-3 hover:text-primary transition duration-200">
+                                        <a href="strategy-detail.html?id=3">考前心理调整：克服紧张情绪，发挥最佳水平</a>
+                                    </h3>
+                                    <p class="text-gray-600 mb-4 line-clamp-3">考试紧张是大多数考生都会面临的问题。本文分享了几种实用的心理调适方法，包括呼吸放松、积极心理暗示、注意力转移等技巧，帮助你在考试中保持平静，发挥出真实水平... </p>
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex items-center">
+                                            <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="作者头像" class="w-8 h-8 rounded-full mr-2" />
+                                            <span class="text-gray-700">陈心理顾问</span>
+                                        </div>
+                                        <div class="flex items-center text-gray-500 text-sm space-x-4">
+                                            <span><i class="fa fa-eye mr-1"></i> 7,842</span>
+                                            <span><i class="fa fa-comment-o mr-1"></i> 156</span>
+                                            <span><i class="fa fa-thumbs-o-up mr-1"></i> 487</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-md p-6 mb-6 card-hover">
+                            <div class="flex flex-col md:flex-row gap-6">
+                                <div class="md:w-1/3">
+                                    <div class="relative rounded-lg overflow-hidden h-48">
+                                        <img src="https://picsum.photos/id/1074/500/300" alt="备考攻略" class="w-full h-full object-cover" />
+                                    </div>
+                                </div>
+                                <div class="md:w-2/3">
+                                    <div class="flex items-center mb-2">
+                                        <span class="inline-block px-3 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full mr-2">声音训练</span>
+                                        <span class="text-gray-500 text-sm"><i class="fa fa-calendar-o mr-1"></i> 2023-04-25</span>
+                                    </div>
+                                    <h3 class="text-xl font-bold text-gray-800 mb-3 hover:text-primary transition duration-200">
+                                        <a href="strategy-detail.html?id=4">科学的发声训练计划：每日15分钟，30天见效</a>
+                                    </h3>
+                                    <p class="text-gray-600 mb-4 line-clamp-3">本文提供了一套系统化的发声训练计划，适合备考期间的日常练习。每天只需15分钟，通过特定的发声练习、共鸣训练和音域拓展，在30天内有效提升声音质量和表现力... </p>
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex items-center">
+                                            <img src="https://randomuser.me/api/portraits/men/55.jpg" alt="作者头像" class="w-8 h-8 rounded-full mr-2" />
+                                            <span class="text-gray-700">刘教授</span>
+                                        </div>
+                                        <div class="flex items-center text-gray-500 text-sm space-x-4">
+                                            <span><i class="fa fa-eye mr-1"></i> 9,234</span>
+                                            <span><i class="fa fa-comment-o mr-1"></i> 145</span>
+                                            <span><i class="fa fa-thumbs-o-up mr-1"></i> 564</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 分页 -->
+                        <div class="flex justify-center mt-8">
+                            <div class="flex space-x-1">
+                                <button class="px-4 py-2 rounded-lg bg-gray-200 text-gray-500 cursor-not-allowed"><i class="fa fa-angle-left"></i> 上一页</button>
+                                <button class="px-4 py-2 rounded-lg bg-primary text-white">1</button>
+                                <button class="px-4 py-2 rounded-lg bg-white text-primary border border-primary hover:bg-light">2</button>
+                                <button class="px-4 py-2 rounded-lg bg-white text-primary border border-primary hover:bg-light">3</button>
+                                <button class="px-4 py-2 rounded-lg bg-white text-primary border border-primary hover:bg-light">4</button>
+                                <button class="px-4 py-2 rounded-lg bg-white text-primary border border-primary hover:bg-light">5</button>
+                                <button class="px-4 py-2 rounded-lg bg-white text-primary border border-primary hover:bg-light">下一页 <i class="fa fa-angle-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- 右侧边栏 -->
+            <div class="lg:w-1/3">
+                <!-- 搜索框 -->
+                <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">搜索攻略</h3>
+                    <div class="relative">
+                        <input type="text" placeholder="搜索攻略文章..." class="w-full pl-12 pr-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition duration-300" />
+                        <i class="fa fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+
+                <!-- 热门标签 -->
+                <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">热门标签</h3>
+                    <div class="flex flex-wrap gap-2">
+                        <a href="#" class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-primary hover:text-white transition duration-200"># 高音训练</a>
+                        <a href="#" class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-primary hover:text-white transition duration-200"># 气息控制</a>
+                        <a href="#" class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-primary hover:text-white transition duration-200"># 院校选择</a>
+                        <a href="#" class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-primary hover:text-white transition duration-200"># 考前准备</a>
+                        <a href="#" class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-primary hover:text-white transition duration-200"># 声音技巧</a>
+                        <a href="#" class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-primary hover:text-white transition duration-200"># 曲目分析</a>
+                        <a href="#" class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-primary hover:text-white transition duration-200"># 心理调适</a>
+                        <a href="#" class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-primary hover:text-white transition duration-200"># 音乐表现力</a>
+                        <a href="#" class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-primary hover:text-white transition duration-200"># 考试技巧</a>
+                    </div>
+                </div>
+
+                <!-- 推荐作者 -->
+                <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">推荐作者</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center p-3 rounded-lg hover:bg-gray-50 transition duration-200">
+                            <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="张教授" class="w-12 h-12 rounded-full mr-3" />
+                            <div class="flex-1">
+                                <h4 class="font-medium text-gray-800">张教授</h4>
+                                <p class="text-sm text-gray-500">中央音乐学院教授</p>
+                            </div>
+                            <button class="px-3 py-1 bg-primary/10 text-primary text-sm rounded-full hover:bg-primary hover:text-white transition duration-200">关注</button>
+                        </div>
+                        <div class="flex items-center p-3 rounded-lg hover:bg-gray-50 transition duration-200">
+                            <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="李老师" class="w-12 h-12 rounded-full mr-3" />
+                            <div class="flex-1">
+                                <h4 class="font-medium text-gray-800">李老师</h4>
+                                <p class="text-sm text-gray-500">知名声乐教师</p>
+                            </div>
+                            <button class="px-3 py-1 bg-primary/10 text-primary text-sm rounded-full hover:bg-primary hover:text-white transition duration-200">关注</button>
+                        </div>
+                        <div class="flex items-center p-3 rounded-lg hover:bg-gray-50 transition duration-200">
+                            <img src="https://randomuser.me/api/portraits/men/55.jpg" alt="刘教授" class="w-12 h-12 rounded-full mr-3" />
+                            <div class="flex-1">
+                                <h4 class="font-medium text-gray-800">刘教授</h4>
+                                <p class="text-sm text-gray-500">上海音乐学院教授</p>
+                            </div>
+                            <button class="px-3 py-1 bg-primary/10 text-primary text-sm rounded-full hover:bg-primary hover:text-white transition duration-200">关注</button>
+                        </div>
+                    </div>
+                    <a href="#" class="block text-center text-primary mt-4 hover:underline">查看更多 <i class="fa fa-angle-right ml-1"></i></a>
+                </div>
+
+                <!-- 相关课程 -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">相关课程</h3>
+                    <div class="space-y-4">
+                        <div class="group relative rounded-lg overflow-hidden">
+                            <img src="https://picsum.photos/id/1062/400/225" alt="课程图片" class="w-full h-40 object-cover" />
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center">
+                                <button class="w-12 h-12 bg-white/90 text-primary rounded-full flex items-center justify-center">
+                                    <i class="fa fa-play"></i>
+                                </button>
+                            </div>
+                            <div class="absolute bottom-0 left-0 right-0 p-3">
+                                <h4 class="text-white font-medium text-sm line-clamp-1">声乐曲目精讲：《美丽的草原我的家》</h4>
+                                <div class="flex items-center justify-between text-xs text-white/80 mt-1">
+                                    <span>张教授</span>
+                                    <span>45分钟</span>
+                                </div>
+                            </div>
+                            <span class="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded">热门</span>
+                        </div>
+                        <div class="group relative rounded-lg overflow-hidden">
+                            <img src="https://picsum.photos/id/1067/400/225" alt="课程图片" class="w-full h-40 object-cover" />
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center">
+                                <button class="w-12 h-12 bg-white/90 text-primary rounded-full flex items-center justify-center">
+                                    <i class="fa fa-play"></i>
+                                </button>
+                            </div>
+                            <div class="absolute bottom-0 left-0 right-0 p-3">
+                                <h4 class="text-white font-medium text-sm line-clamp-1">气息控制实战训练课程</h4>
+                                <div class="flex items-center justify-between text-xs text-white/80 mt-1">
+                                    <span>李老师</span>
+                                    <span>60分钟</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="#" class="block text-center text-primary mt-4 hover:underline">查看所有课程 <i class="fa fa-angle-right ml-1"></i></a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-primary text-white">
+        <div class="container mx-auto px-4 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">关于我们</h3>
+                    <p class="mb-4 text-gray-300">仔仔艺考声乐助手致力于为艺考生提供专业、全面的声乐学习资源和服务，帮助每一位艺考生实现自己的艺术梦想。</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-white hover:text-gray-300 transition duration-200"><i class="fa fa-weibo text-xl"></i></a>
+                        <a href="#" class="text-white hover:text-gray-300 transition duration-200"><i class="fa fa-wechat text-xl"></i></a>
+                        <a href="#" class="text-white hover:text-gray-300 transition duration-200"><i class="fa fa-qq text-xl"></i></a>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">快速链接</h3>
+                    <ul class="space-y-2">
+                        <li><a href="index.html" class="text-gray-300 hover:text-white transition duration-200">首页</a></li>
+                        <li><a href="song-library.html" class="text-gray-300 hover:text-white transition duration-200">曲目库</a></li>
+                        <li><a href="strategy.html" class="text-gray-300 hover:text-white transition duration-200">学习攻略</a></li>
+                        <li><a href="video.html" class="text-gray-300 hover:text-white transition duration-200">视频教学</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">联系我们</h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-start">
+                            <i class="fa fa-envelope-o mt-1 mr-3"></i>
+                            <span class="text-gray-300">contact@zaizaiyikao.com</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fa fa-phone mr-3"></i>
+                            <span class="text-gray-300">400-123-4567</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa fa-map-marker mt-1 mr-3"></i>
+                            <span class="text-gray-300">北京市海淀区中关村南大街5号</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>© 2023 仔仔艺考声乐助手 版权所有 | 京ICP备12345678号</p>
+            </div>
+        </div>
+    </footer>
+
+
+
+    
+    <script>
+        // 设置移动端菜单
+        function setupMobileMenu() {
+            const mobileMenuBtn = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            if (mobileMenuBtn && mobileMenu) {
+                mobileMenuBtn.addEventListener('click', () => {
+                    mobileMenu.classList.toggle('hidden');
+                });
+            }
+        }
+        
+        // 设置攻略分类筛选
+        function setupStrategyFilters() {
+            const filterButtons = document.querySelectorAll('#strategy-filters .filter-btn');
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // 移除所有按钮的active状态
+                    filterButtons.forEach(btn => {
+                        btn.classList.remove('filter-btn-active');
+                        btn.classList.add('filter-btn-inactive');
+                    });
+                    
+                    // 添加当前按钮的active状态
+                    this.classList.remove('filter-btn-inactive');
+                    this.classList.add('filter-btn-active');
+                    
+                    // 这里可以添加实际的筛选逻辑
+                    const category = this.getAttribute('data-category');
+                    console.log('筛选分类:', category);
+                    // 实际项目中应该根据分类筛选攻略列表
+                });
+            });
+        }
+        
+        // 设置热门/最新切换
+        function setupTabButtons() {
+            const tabButtons = document.querySelectorAll('[data-tab]');
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const tab = this.getAttribute('data-tab');
+                    
+                    // 更新按钮状态
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('bg-primary', 'text-white');
+                        btn.classList.add('bg-gray-200', 'text-gray-600');
+                    });
+                    
+                    this.classList.remove('bg-gray-200', 'text-gray-600');
+                    this.classList.add('bg-primary', 'text-white');
+                    
+                    console.log('切换到标签:', tab);
+                    // 实际项目中应该根据标签切换内容
+                });
+            });
+        }
+        
+
+        
+
+        
+        // 初始化应用
+        function initApp() {
+            setupMobileMenu();
+            setupStrategyFilters();
+            setupTabButtons();
+        }
+        
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化应用功能
+            initApp();
+        });
+    </script>
+</body>
+</html>

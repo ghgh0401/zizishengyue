@@ -1,0 +1,53 @@
+# 仔仔艺考助手项目文件分析与清理建议
+
+## 核心文件（必须保留）
+- **server.js** - 项目核心服务器代码，绝对不能删除
+- **package.json** 和 **package-lock.json** - 项目依赖配置文件
+- **admin.html**, **index.html**, **login.html**, **song-detail.html**, **song-library.html**, **strategy.html**, **user-center.html** - 主要前端页面文件
+- **HTML/**, **images/**, **sheet-music/** - 前端资源文件夹，包含图片、音频等资源
+- **performance-middleware.js**, **performance-optimization.js** - 性能优化相关代码
+- **开机自启和数据库连接指南.txt** - 使用指南文档
+
+## 工具批处理文件分析
+
+### 1. 主要功能重复的文件
+
+以下文件功能有大量重叠，都包含Node.js环境检查、MySQL服务检查、依赖安装和服务器启动等功能：
+
+- **connect_server_and_db.bat** - 完整的服务器和数据库连接测试工具
+- **direct_connect.bat** - 直接连接服务器的一站式工具
+- **test_local_connection.bat** - 本地连接测试与修复工具
+- **fix_program_opening.bat** - 程序打不开修复工具
+- **fix_page_access.bat** - 网页无法访问问题诊断与修复工具
+
+这些文件功能高度重叠，可以保留1-2个最全面的，其他可以删除。
+
+### 2. 特定功能工具
+
+- **fix_bat_file_opening.bat** - 专门用于修复批处理文件打不开的问题，具有独特功能
+- **auto_start_server.bat** - 可能与开机自启相关
+- **config_mysql_auto_start.bat** - MySQL自动启动配置工具
+
+### 3. 简单启动脚本
+
+- **start_server.bat** - 简单的服务器启动脚本（存在语法错误）
+- **start_server_and_open_page.bat** - 启动服务器并打开页面
+- **test_open_files.bat** - 可能是临时测试文件
+
+## 清理建议
+
+**建议保留的文件：**
+- direct_connect.bat 或 connect_server_and_db.bat（两者功能最全面）
+- fix_bat_file_opening.bat（独特功能）
+- auto_start_server.bat
+- config_mysql_auto_start.bat
+
+**建议删除的文件（功能重复或有错误）：**
+- start_server.bat（有语法错误）
+- start_server_and_open_page.bat（功能已包含在其他工具中）
+- test_open_files.bat（可能是临时文件）
+- 以及其他功能重复的工具文件（根据个人使用习惯选择保留1-2个最常用的）
+
+## 使用建议
+
+如果保留多个工具文件，建议创建一个简短的README文档，说明每个工具的用途和使用场景，以便用户快速找到需要的工具。
